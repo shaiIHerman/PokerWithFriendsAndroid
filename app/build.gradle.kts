@@ -56,7 +56,8 @@ dependencies {
     implementation(libs.bundles.hilt)
     kapt(libs.hilt.android.compiler)
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.firestore)
+    implementation (libs.bundles.firebase)
+    implementation (libs.play.services.auth)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

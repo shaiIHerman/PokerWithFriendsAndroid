@@ -5,6 +5,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.firebase.auth.GoogleAuthProvider
 import com.shai.pokerwithfriendsandroid.auth.AuthService
 import com.shai.pokerwithfriendsandroid.screens.states.LoginScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,14 +64,41 @@ class LoginViewModel @Inject constructor(
     }
 
     // Login with Google
-    fun loginWithGoogle(idToken: String) {
+    fun signInWithGoogle(account: GoogleSignInAccount) {
+        val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+
         viewModelScope.launch {
-            val user = authService.loginWithGoogle(idToken)
-            if (user != null) {
-                // Handle success (navigate to home screen)
-            } else {
-                // Handle failure (show error message)
+            try {
+                // Perform Firebase sign-in using the Google account credentials
+                val result = authService.loginWithGoogle(credential)
+
+                // Check if sign-in was successful
+                if (result?.uid != null) {
+                    // Successfully authenticated
+                    Log.d("LoginViewModel", "Google Sign-In successful")
+//                    _authState.value = AuthState.Authenticated(result.user!!.email ?: "Unknown")
+                } else {
+                    // Authentication failed (although this shouldn't happen)
+//                    _authState.value = AuthState.Error("Authentication failed")
+                    Log.d("LoginViewModel", "Authentication failed")
+                }
+            } catch (e: Exception) {
+                Log.e("LoginViewModel", "Google Sign-In failed", e)
+//                _authState.value = AuthState.Error(e.localizedMessage)
             }
+        }
+    }
+
+    // Google Sign-In method (trigger the sign-in process)
+    fun initiateGoogleSignIn(googleSignInClient: GoogleSignInClient) {
+        try {
+            // This launches the Google sign-in intent
+            val signInIntent = googleSignInClient.signInIntent
+            Log.d("LoginViewModel", "Launching Google Sign-In intent")
+//            _authState.value = AuthState.SigningIn
+        } catch (e: Exception) {
+            Log.e("LoginViewModel", "Error initiating Google Sign-In", e)
+//            _authState.value = AuthState.Error(e.localizedMessage)
         }
     }
 

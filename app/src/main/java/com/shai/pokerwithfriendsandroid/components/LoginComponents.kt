@@ -75,7 +75,7 @@ fun ForgotPasswordLink(onClick: () -> Unit) {
 }
 
 @Composable
-fun BottomComponent(screenMode: LoginScreenState) {
+fun BottomComponent(screenMode: LoginScreenState, onGoogleLoginClick: () -> Unit) {
     Column {
         PrimaryButton(
             labelVal = when {
@@ -88,7 +88,7 @@ fun BottomComponent(screenMode: LoginScreenState) {
             Spacer(modifier = Modifier.height(10.dp))
             DividerWithText()
             Spacer(modifier = Modifier.height(5.dp))
-            GoogleLoginButton()
+            GoogleLoginButton(onGoogleLoginClick = onGoogleLoginClick)
         }
     }
 }
@@ -130,9 +130,9 @@ fun BottomLoginTextComponent(
 }
 
 @Composable
-fun GoogleLoginButton() {
+fun GoogleLoginButton(onGoogleLoginClick: () -> Unit) {
     Button(
-        onClick = { /*TODO: Implement Google login functionality*/ },
+        onClick = { onGoogleLoginClick() },
         modifier = Modifier.fillMaxWidth(),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = BgSocial

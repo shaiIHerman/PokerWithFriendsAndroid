@@ -1,5 +1,6 @@
 package com.shai.pokerwithfriendsandroid.auth
 
+import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.tasks.await
@@ -18,15 +19,14 @@ class FirebaseAuthService @Inject constructor(
         }
     }
 
-//    override suspend fun loginWithGoogle(idToken: String): FirebaseUser? {
-//        return try {
-//            val credential: AuthCredential = GoogleAuthProvider.getCredential(idToken, null)
-//            val authResult = firebaseAuth.signInWithCredential(credential).await()
-//            authResult.user
-//        } catch (e: Exception) {
-//            null
-//        }
-//    }
+    override suspend fun loginWithGoogle(credential: AuthCredential): FirebaseUser? {
+        return try {
+            val authResult = firebaseAuth.signInWithCredential(credential).await()
+            authResult.user
+        } catch (e: Exception) {
+            null
+        }
+    }
 
 //    override fun getGoogleSignInClient(): GoogleSignInClient {
 //        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)

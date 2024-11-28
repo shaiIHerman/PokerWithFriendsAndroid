@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.shai.pokerwithfriendsandroid.screens.HomeScreen
 import com.shai.pokerwithfriendsandroid.screens.LoginScreen
 import com.shai.pokerwithfriendsandroid.screens.SplashScreen
 import com.shai.pokerwithfriendsandroid.ui.theme.Primary
@@ -41,9 +42,7 @@ fun NavigationHost(
             LoginScreen()
         }
         composable(route = "home_screen") {
-//            HomeScreen(onCharacterSelected = { characterId ->
-//                navController.navigate("character_details/$characterId")
-//            })
+            HomeScreen()
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.shai.pokerwithfriendsandroid.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shai.pokerwithfriendsandroid.auth.AuthService
@@ -21,6 +22,7 @@ class SplashViewModel @Inject constructor(
     fun checkAuthentication() = viewModelScope.launch {
         delay(1000)
         val currentUser = authService.getCurrentUser()
+        Log.d("SplashViewModel", "User: ${currentUser?.email}")
         _isAuthenticated.value = currentUser != null
     }
 }

@@ -10,7 +10,9 @@ plugins {
 android {
     namespace = "com.shai.pokerwithfriendsandroid"
     compileSdk = 34
-
+    buildFeatures {
+        buildConfig = true
+    }
     defaultConfig {
         applicationId = "com.shai.pokerwithfriendsandroid"
         minSdk = 24
@@ -19,11 +21,29 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "GOOGLE_SIGN_IN_CLIENT_ID",
+            "\"${project.findProperty("googleSignInClientId")}\""
+        )
     }
 
     buildTypes {
+        debug {
+            buildConfigField(
+                "String",
+                "GOOGLE_SIGN_IN_CLIENT_ID",
+                "\"${project.findProperty("googleSignInClientId")}\""
+            )
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField(
+                "String",
+                "GOOGLE_SIGN_IN_CLIENT_ID",
+                "\"${project.findProperty("googleSignInClientId")}\""
+            )
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
@@ -57,8 +77,8 @@ dependencies {
     implementation(libs.bundles.hilt)
     kapt(libs.hilt.android.compiler)
     implementation(platform(libs.firebase.bom))
-    implementation (libs.bundles.firebase)
-    implementation (libs.play.services.auth)
+    implementation(libs.bundles.firebase)
+    implementation(libs.play.services.auth)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

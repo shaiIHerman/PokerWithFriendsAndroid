@@ -37,6 +37,10 @@ class LoginViewModel @Inject constructor(
     private val _confirmPassword = MutableLiveData("")
     val confirmPassword: LiveData<String> = _confirmPassword
 
+    private val _signInClient = MutableLiveData(authService.getGoogleSignInClient())
+    val googleSignInClient: LiveData<GoogleSignInClient> = _signInClient
+
+
     fun updateEmail(newEmail: String) {
         Log.d("LoginViewModel", "Updating email to: $newEmail")
         _email.value = newEmail
@@ -90,10 +94,10 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    fun initiateGoogleSignIn(googleSignInClient: GoogleSignInClient) {
+    fun initiateGoogleSignIn() {
         try {
             // This launches the Google sign-in intent
-            val signInIntent = googleSignInClient.signInIntent
+            val signInIntent = _signInClient.value?.signInIntent
             Log.d("LoginViewModel", "Launching Google Sign-In intent")
 //            _authState.value = AuthState.SigningIn
         } catch (e: Exception) {

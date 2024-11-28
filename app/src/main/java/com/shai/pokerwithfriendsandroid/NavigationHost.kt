@@ -13,7 +13,6 @@ import com.shai.pokerwithfriendsandroid.screens.LoginScreen
 import com.shai.pokerwithfriendsandroid.screens.SplashScreen
 import com.shai.pokerwithfriendsandroid.ui.theme.Primary
 
-
 @Composable
 fun NavigationHost(
     navController: NavHostController, innerPadding: PaddingValues

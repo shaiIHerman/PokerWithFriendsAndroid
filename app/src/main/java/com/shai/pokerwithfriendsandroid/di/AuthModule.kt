@@ -1,20 +1,44 @@
 package com.shai.pokerwithfriendsandroid.di
 
+import android.content.Context
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
+import com.shai.pokerwithfriendsandroid.BuildConfig
 import com.shai.pokerwithfriendsandroid.auth.AuthService
 import com.shai.pokerwithfriendsandroid.auth.FirebaseAuthService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class)  // Ensures this is available throughout the app
+@InstallIn(SingletonComponent::class)
 object AuthModule {
 
     @Provides
-    fun provideAuthService(firebaseAuth: FirebaseAuth): AuthService {
-        return FirebaseAuthService(firebaseAuth)
+    @Singleton
+    fun provideGoogleSignInOptions(): GoogleSignInOptions {
+        return GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(BuildConfig.GOOGLE_SIGN_IN_CLIENT_ID)
+            .requestEmail()
+            .build()
+    }
+
+    @Provides
+    fun provideGoogleSignInClient(
+        @ApplicationContext context: Context, // Use ActivityContext for Activity-specific context
+        gso: GoogleSignInOptions
+    ): GoogleSignInClient {
+        return GoogleSignIn.getClient(context, gso) // Cast Context to Activity
+    }
+
+    @Provides
+    fun provideAuthService(firebaseAuth: FirebaseAuth, googleSignInClient: GoogleSignInClient): AuthService {
+        return FirebaseAuthService(firebaseAuth, googleSignInClient)
     }
 
     @Provides

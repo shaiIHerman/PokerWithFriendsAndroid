@@ -1,4 +1,4 @@
-package com.shai.pokerwithfriendsandroid
+package com.shai.pokerwithfriendsandroid.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
@@ -38,7 +38,11 @@ fun NavigationHost(
             })
         }
         composable(route = "login_screen") {
-            LoginScreen()
+            LoginScreen {
+                navController.navigate("home_screen") {
+                    popUpTo("login_screen") { inclusive = true }
+                }
+            }
         }
         composable(route = "home_screen") {
             HomeScreen()

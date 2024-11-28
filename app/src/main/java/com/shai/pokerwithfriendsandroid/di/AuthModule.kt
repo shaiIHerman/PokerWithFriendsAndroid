@@ -30,10 +30,10 @@ object AuthModule {
 
     @Provides
     fun provideGoogleSignInClient(
-        @ApplicationContext context: Context, // Use ActivityContext for Activity-specific context
+        @ApplicationContext context: Context,
         gso: GoogleSignInOptions
     ): GoogleSignInClient {
-        return GoogleSignIn.getClient(context, gso) // Cast Context to Activity
+        return GoogleSignIn.getClient(context, gso)
     }
 
     @Provides

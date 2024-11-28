@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -26,15 +27,17 @@ import com.shai.pokerwithfriendsandroid.components.ConfirmPasswordField
 import com.shai.pokerwithfriendsandroid.components.EmailField
 import com.shai.pokerwithfriendsandroid.components.ForgotPasswordLink
 import com.shai.pokerwithfriendsandroid.components.HeadingText
+import com.shai.pokerwithfriendsandroid.components.LoadingState
 import com.shai.pokerwithfriendsandroid.components.NameField
 import com.shai.pokerwithfriendsandroid.components.PasswordField
 import com.shai.pokerwithfriendsandroid.components.WelcomeText
+import com.shai.pokerwithfriendsandroid.screens.states.AuthState
 import com.shai.pokerwithfriendsandroid.screens.states.LoginScreenState
 import com.shai.pokerwithfriendsandroid.viewmodels.LoginViewModel
 
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = hiltViewModel()
+    viewModel: LoginViewModel = hiltViewModel(), onAuthenticated: () -> Unit
 ) {
 
     val googleSignInClient by viewModel.googleSignInClient.observeAsState(null)
@@ -69,6 +72,29 @@ fun LoginScreen(
         LoginScreenState.ForgotPassword to { vm -> ForgotPasswordView(vm) })
     val screenContent = screenContentMap[screenMode]
 
+    val authState by viewModel.authState.collectAsState()
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Authenticated) {
+            onAuthenticated()
+        }
+    }
+    when (authState) {
+        AuthState.Authenticated -> {
+            Log.d("LoginScreen", "Google Sign-In successful")
+        }
+
+        AuthState.Initial -> InitialView(screenContent, viewModel)
+        AuthState.SigningIn -> LoadingState()
+        is AuthState.Error -> {
+            // todo: Handle error state
+        }
+    }
+}
+
+@Composable
+fun InitialView(
+    screenContent: @Composable() ((LoginViewModel) -> Unit)?, viewModel: LoginViewModel
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()

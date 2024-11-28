@@ -1,12 +1,12 @@
 package com.shai.pokerwithfriendsandroid.components
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
@@ -45,7 +45,6 @@ import androidx.lifecycle.LiveData
 import com.shai.pokerwithfriendsandroid.R
 import com.shai.pokerwithfriendsandroid.ui.theme.BorderColor
 import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
-import com.shai.pokerwithfriendsandroid.ui.theme.Primary
 import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
 
 @Composable
@@ -76,7 +75,7 @@ fun MyTextField(
     labelVal: String,
     icon: Int? = null,
     vector: ImageVector? = null,
-    fieldValue: LiveData<String>,
+    fieldValue: String,
     onValueChange: (String) -> Unit
 ) {
     val typeOfKeyboard: KeyboardType = when (labelVal) {
@@ -86,8 +85,13 @@ fun MyTextField(
     }
 
     OutlinedTextField(
-        value = fieldValue.value!!,
-        onValueChange = { newValue: String -> onValueChange(newValue) },
+        value = fieldValue,
+        onValueChange = { newValue: String ->
+            run {
+                Log.d("TAG", "MyTextField: $newValue")
+                onValueChange(newValue)
+            }
+        },
         modifier = Modifier.fillMaxWidth(),
         colors = TextFieldDefaults.outlinedTextFieldColors(
             focusedBorderColor = BrandColor,
@@ -118,13 +122,13 @@ fun MyTextField(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PasswordInputComponent(
-    placeholder: String, fieldValue: LiveData<String>, onValueChange: (String) -> Unit
+    placeholder: String, fieldValue: String, onValueChange: (String) -> Unit
 ) {
     var isShowPassword by remember {
         mutableStateOf(false)
     }
     OutlinedTextField(
-        value = fieldValue.value!!,
+        value = fieldValue,
         onValueChange = {
             onValueChange(it)
         },
@@ -173,9 +177,9 @@ fun ForgotPasswordTextComponent(onClick: () -> Unit) {
 }
 
 @Composable
-fun PrimaryButton(labelVal: String) {
+fun PrimaryButton(labelVal: String, onPrimaryBtnClick: () -> Unit = {}) {
     Button(
-        onClick = { /*TODO*/ }, colors = ButtonDefaults.buttonColors(
+        onClick = { onPrimaryBtnClick() }, colors = ButtonDefaults.buttonColors(
             containerColor = BrandColor
         ), modifier = Modifier
             .fillMaxWidth()

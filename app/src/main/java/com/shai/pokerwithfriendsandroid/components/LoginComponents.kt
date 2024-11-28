@@ -13,10 +13,13 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -39,11 +42,43 @@ import com.shai.pokerwithfriendsandroid.viewmodels.LoginViewModel
 
 @Composable
 fun EmailField(viewModel: LoginViewModel) {
+    val email by viewModel.email.observeAsState("")
     MyTextField(
         labelVal = "E-mail",
         vector = Icons.Filled.Email,
-        fieldValue = viewModel.email,
+        fieldValue = email,
         onValueChange = viewModel::updateEmail
+    )
+}
+
+@Composable
+fun NameField(viewModel: LoginViewModel) {
+    val name by viewModel.name.observeAsState("")
+    MyTextField(
+        labelVal = "Name",
+        vector = Icons.Filled.Face,
+        fieldValue = name,
+        onValueChange = viewModel::updateName
+    )
+}
+
+@Composable
+fun PasswordField(viewModel: LoginViewModel) {
+    val password by viewModel.password.observeAsState("")
+    PasswordInputComponent(
+        placeholder = "Password",
+        fieldValue = password,
+        onValueChange = viewModel::updatePassword
+    )
+}
+
+@Composable
+fun ConfirmPasswordField(viewModel: LoginViewModel) {
+    val password by viewModel.confirmPassword.observeAsState("")
+    PasswordInputComponent(
+        placeholder = "Confirm Password",
+        fieldValue = password,
+        onValueChange = viewModel::updateConfirmPassword
     )
 }
 
@@ -75,7 +110,11 @@ fun ForgotPasswordLink(onClick: () -> Unit) {
 }
 
 @Composable
-fun BottomComponent(screenMode: LoginScreenState, onGoogleLoginClick: () -> Unit) {
+fun BottomComponent(
+    screenMode: LoginScreenState,
+    onGoogleLoginClick: () -> Unit = {},
+    onPrimaryBtnClick: () -> Unit
+) {
     Column {
         PrimaryButton(
             labelVal = when {
@@ -83,7 +122,7 @@ fun BottomComponent(screenMode: LoginScreenState, onGoogleLoginClick: () -> Unit
                 screenMode.isRegister() -> "Sign Up"
                 else -> "Submit"
             }
-        )
+        , onPrimaryBtnClick = onPrimaryBtnClick)
         if (!screenMode.isForgot()) {
             Spacer(modifier = Modifier.height(10.dp))
             DividerWithText()

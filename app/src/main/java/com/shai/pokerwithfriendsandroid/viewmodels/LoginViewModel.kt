@@ -38,6 +38,7 @@ class LoginViewModel @Inject constructor(
     val confirmPassword: LiveData<String> = _confirmPassword
 
     fun updateEmail(newEmail: String) {
+        Log.d("LoginViewModel", "Updating email to: $newEmail")
         _email.value = newEmail
     }
 
@@ -89,7 +90,6 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    // Google Sign-In method (trigger the sign-in process)
     fun initiateGoogleSignIn(googleSignInClient: GoogleSignInClient) {
         try {
             // This launches the Google sign-in intent
@@ -103,14 +103,12 @@ class LoginViewModel @Inject constructor(
     }
 
     // Login with Email/Password
-    fun loginWithEmail(email: String, password: String) {
-        viewModelScope.launch {
-            val user = authService.loginWithEmail(email, password)
-            if (user != null) {
-                // Handle success (navigate to home screen)
-            } else {
-                // Handle failure (show error message)
-            }
+    fun loginWithEmail() = viewModelScope.launch {
+        val user = authService.loginWithEmail(email.value!!, password.value!!)
+        if (user != null) {
+            Log.d("LoginViewModel", "Login successful")
+        } else {
+            Log.d("LoginViewModel", "Login failed")
         }
     }
 }

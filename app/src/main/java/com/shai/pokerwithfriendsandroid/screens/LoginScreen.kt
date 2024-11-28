@@ -26,10 +26,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.shai.pokerwithfriendsandroid.components.BottomComponent
 import com.shai.pokerwithfriendsandroid.components.BottomLoginTextComponent
+import com.shai.pokerwithfriendsandroid.components.ConfirmPasswordField
 import com.shai.pokerwithfriendsandroid.components.EmailField
 import com.shai.pokerwithfriendsandroid.components.ForgotPasswordLink
 import com.shai.pokerwithfriendsandroid.components.HeadingText
 import com.shai.pokerwithfriendsandroid.components.MyTextField
+import com.shai.pokerwithfriendsandroid.components.NameField
+import com.shai.pokerwithfriendsandroid.components.PasswordField
 import com.shai.pokerwithfriendsandroid.components.PasswordInputComponent
 import com.shai.pokerwithfriendsandroid.components.WelcomeText
 import com.shai.pokerwithfriendsandroid.screens.states.LoginScreenState
@@ -104,7 +107,7 @@ fun ForgotPasswordView(
         HeadingText(LoginScreenState.ForgotPassword)
         Spacer(modifier = Modifier.height(16.dp))
         EmailField(viewModel)
-        BottomComponent(LoginScreenState.ForgotPassword) {}
+        BottomComponent(LoginScreenState.ForgotPassword){}
         Spacer(modifier = Modifier.height(12.dp))
         Spacer(modifier = Modifier.weight(1f))
     }
@@ -119,14 +122,12 @@ fun LoginView(
         Spacer(modifier = Modifier.height(16.dp))
         EmailField(viewModel)
         Spacer(modifier = Modifier.height(16.dp))
-        PasswordInputComponent(
-            placeholder = "Password",
-            fieldValue = viewModel.password,
-            onValueChange = viewModel::updatePassword
-        )
+        PasswordField(viewModel)
         Spacer(modifier = Modifier.height(8.dp))
         ForgotPasswordLink { viewModel.onForgotPassword() }
-        BottomComponent(LoginScreenState.Login, onGoogleLoginClick = onGoogleLoginClick)
+        BottomComponent(LoginScreenState.Login, onGoogleLoginClick = onGoogleLoginClick){
+            viewModel.loginWithEmail()
+        }
         Spacer(modifier = Modifier.height(12.dp))
         Spacer(modifier = Modifier.weight(1f))
         BottomLoginTextComponent(initialText = "Don't have an account? ",
@@ -144,26 +145,12 @@ fun RegisterView(
         Spacer(modifier = Modifier.height(16.dp))
         EmailField(viewModel)
         Spacer(modifier = Modifier.height(16.dp))
-        MyTextField(
-            labelVal = "Name",
-            vector = Icons.Filled.Face,
-            icon = null,
-            fieldValue = viewModel.name,
-            onValueChange = viewModel::updateName
-        )
+        NameField(viewModel)
         Spacer(modifier = Modifier.height(16.dp))
-        PasswordInputComponent(
-            placeholder = "Password",
-            fieldValue = viewModel.password,
-            onValueChange = viewModel::updatePassword
-        )
+        PasswordField(viewModel)
         Spacer(modifier = Modifier.height(16.dp))
-        PasswordInputComponent(
-            placeholder = "Confirm Password",
-            fieldValue = viewModel.confirmPassword,
-            onValueChange = viewModel::updateConfirmPassword
-        )
-        BottomComponent(LoginScreenState.Register, onGoogleLoginClick = onGoogleLoginClick)
+        ConfirmPasswordField(viewModel)
+        BottomComponent(LoginScreenState.Register, onGoogleLoginClick = onGoogleLoginClick){}
         Spacer(modifier = Modifier.height(12.dp))
         Spacer(modifier = Modifier.weight(1f))
         BottomLoginTextComponent(initialText = "Already have an account? ",

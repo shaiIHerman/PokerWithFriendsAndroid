@@ -46,7 +46,6 @@ class LoginViewModel @Inject constructor(
 
 
     fun updateEmail(newEmail: String) {
-        Log.d("LoginViewModel", "Updating email to: $newEmail")
         _email.value = newEmail
     }
 
@@ -61,8 +60,6 @@ class LoginViewModel @Inject constructor(
     fun updateConfirmPassword(newPassword: String) {
         _confirmPassword.value = newPassword
     }
-
-    val currentUser = authService.getCurrentUser()
 
     fun onForgotPassword() {
         _screenMode.update { return@update LoginScreenState.ForgotPassword }
@@ -81,14 +78,11 @@ class LoginViewModel @Inject constructor(
                 _authState.value = AuthState.SigningIn
                 val result = authService.loginWithGoogle(credential)
                 if (result?.uid != null) {
-                    Log.d("LoginViewModel", "Google Sign-In successful")
                     _authState.value = AuthState.Authenticated
                 } else {
                     _authState.value = AuthState.Error("Authentication failed")
-                    Log.d("LoginViewModel", "Authentication failed")
                 }
             } catch (e: Exception) {
-                Log.e("LoginViewModel", "Google Sign-In failed", e)
                 _authState.value = AuthState.Error(e.message.toString())
             }
         }

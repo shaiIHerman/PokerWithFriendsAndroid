@@ -16,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -59,16 +60,16 @@ fun LoginScreen(
                 Log.e("LoginScreen", "Google sign-in result was canceled or failed")
             }
         }
-
+    val googleSignInAction = remember {
+        {
+            resultLauncher.launch(googleSignInClient?.signInIntent)
+            viewModel.initiateGoogleSignIn()
+        }
+    }
     val screenMode by viewModel.screenMode.collectAsState()
     val screenContentMap: Map<LoginScreenState, @Composable (LoginViewModel) -> Unit> = mapOf(
-        LoginScreenState.Login to { vm ->
-            LoginView(vm) {
-                resultLauncher.launch(googleSignInClient?.signInIntent)
-                viewModel.initiateGoogleSignIn()
-            }
-        },
-        LoginScreenState.Register to { vm -> RegisterView(vm) {} },
+        LoginScreenState.Login to { vm -> LoginView(vm) { googleSignInAction() } },
+        LoginScreenState.Register to { vm -> RegisterView(vm) { googleSignInAction() } },
         LoginScreenState.ForgotPassword to { vm -> ForgotPasswordView(vm) })
     val screenContent = screenContentMap[screenMode]
 
@@ -78,22 +79,20 @@ fun LoginScreen(
             onAuthenticated()
         }
     }
-    when (authState) {
-        AuthState.Authenticated -> {
-            Log.d("LoginScreen", "Google Sign-In successful")
-        }
-
+    when (val state = authState) {
+        AuthState.Authenticated -> {}
         AuthState.Initial -> InitialView(screenContent, viewModel)
         AuthState.SigningIn -> LoadingState()
         is AuthState.Error -> {
             // todo: Handle error state
+            Log.e("LoginScreen", "Sign-In failed", Throwable(state.message))
         }
     }
 }
 
 @Composable
 fun InitialView(
-    screenContent: @Composable() ((LoginViewModel) -> Unit)?, viewModel: LoginViewModel
+    screenContent: @Composable ((LoginViewModel) -> Unit)?, viewModel: LoginViewModel
 ) {
     Column(
         modifier = Modifier
@@ -112,9 +111,7 @@ fun ForgotPasswordView(
     viewModel: LoginViewModel,
 ) {
     Column {
-        HeadingText(LoginScreenState.ForgotPassword)
-        Spacer(modifier = Modifier.height(16.dp))
-        EmailField(viewModel)
+        AuthTopPart(state = LoginScreenState.ForgotPassword, viewModel)
         BottomComponent(LoginScreenState.ForgotPassword) {}
         Spacer(modifier = Modifier.height(12.dp))
         Spacer(modifier = Modifier.weight(1f))
@@ -126,9 +123,7 @@ fun LoginView(
     viewModel: LoginViewModel, onGoogleLoginClick: () -> Unit
 ) {
     Column {
-        HeadingText(LoginScreenState.Login)
-        Spacer(modifier = Modifier.height(16.dp))
-        EmailField(viewModel)
+        AuthTopPart(state = LoginScreenState.Login, viewModel)
         Spacer(modifier = Modifier.height(16.dp))
         PasswordField(viewModel)
         Spacer(modifier = Modifier.height(8.dp))
@@ -149,9 +144,7 @@ fun RegisterView(
     viewModel: LoginViewModel, onGoogleLoginClick: () -> Unit
 ) {
     Column {
-        HeadingText(LoginScreenState.Register)
-        Spacer(modifier = Modifier.height(16.dp))
-        EmailField(viewModel)
+        AuthTopPart(state = LoginScreenState.Register, viewModel)
         Spacer(modifier = Modifier.height(16.dp))
         NameField(viewModel)
         Spacer(modifier = Modifier.height(16.dp))
@@ -165,4 +158,11 @@ fun RegisterView(
             actionText = "Login!",
             onActionTextClick = { viewModel.onRegister() })
     }
+}
+
+@Composable
+fun AuthTopPart(state: LoginScreenState, viewModel: LoginViewModel) {
+    HeadingText(state)
+    Spacer(modifier = Modifier.height(16.dp))
+    EmailField(viewModel)
 }

@@ -14,7 +14,6 @@ import com.shai.pokerwithfriendsandroid.screens.states.LoginScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -62,17 +61,20 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onForgotPassword() {
-        _screenMode.update { return@update LoginScreenState.ForgotPassword }
+        _screenMode.value = LoginScreenState.ForgotPassword
     }
 
     fun onRegister() {
-        _screenMode.update { return@update LoginScreenState.Register }
+        _screenMode.value = LoginScreenState.Register
+    }
+
+    fun onLogin() {
+        _screenMode.value = LoginScreenState.Login
     }
 
     // Login with Google
     fun signInWithGoogle(account: GoogleSignInAccount) {
         val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-
         viewModelScope.launch {
             try {
                 _authState.value = AuthState.SigningIn
@@ -98,11 +100,26 @@ class LoginViewModel @Inject constructor(
 
     // Login with Email/Password
     fun loginWithEmail() = viewModelScope.launch {
+        _authState.value = AuthState.SigningIn
         val user = authService.loginWithEmail(email.value!!, password.value!!)
         if (user != null) {
+            _authState.value = AuthState.Authenticated
             Log.d("LoginViewModel", "Login successful")
         } else {
-            Log.d("LoginViewModel", "Login failed")
+            _authState.value = AuthState.Error("Authentication failed")
+            Log.e("LoginViewModel", "Login failed")
+        }
+    }
+
+    fun signUpWithEmail() = viewModelScope.launch {
+        _authState.value = AuthState.SigningIn
+        val user = authService.signUpWithEmail(email.value!!, password.value!!)
+        if (user != null) {
+            _authState.value = AuthState.Authenticated
+            Log.d("LoginViewModel", "Login successful")
+        } else {
+            _authState.value = AuthState.Error("Authentication failed")
+            Log.e("LoginViewModel", "Login failed")
         }
     }
 }

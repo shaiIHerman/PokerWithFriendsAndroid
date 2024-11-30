@@ -151,12 +151,15 @@ fun RegisterView(
         PasswordField(viewModel)
         Spacer(modifier = Modifier.height(16.dp))
         ConfirmPasswordField(viewModel)
-        BottomComponent(LoginScreenState.Register, onGoogleLoginClick = onGoogleLoginClick) {}
+        BottomComponent(
+            LoginScreenState.Register,
+            onGoogleLoginClick = onGoogleLoginClick
+        ) { viewModel.signUpWithEmail() }
         Spacer(modifier = Modifier.height(12.dp))
         Spacer(modifier = Modifier.weight(1f))
         BottomLoginTextComponent(initialText = "Already have an account? ",
             actionText = "Login!",
-            onActionTextClick = { viewModel.onRegister() })
+            onActionTextClick = { viewModel.onLogin() })
     }
 }
 

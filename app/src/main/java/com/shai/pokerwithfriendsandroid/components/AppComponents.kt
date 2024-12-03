@@ -45,6 +45,7 @@ import com.shai.pokerwithfriendsandroid.R
 import com.shai.pokerwithfriendsandroid.ui.theme.BorderColor
 import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
 import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
+import com.shai.pokerwithfriendsandroid.utils.PasswordValidator
 
 @Composable
 fun ImageComponent(image: Int) {
@@ -135,17 +136,25 @@ fun PasswordInputComponent(
     fieldValue: String,
     onValueChange: (String) -> Unit,
     validation: Pair<Boolean, String> = Pair(true, ""),
+    onFocusChanged: (Boolean) -> Unit = {},
+    isRegisterPassword: Boolean
 ) {
     var isShowPassword by remember {
         mutableStateOf(false)
     }
+    var hasFocus by remember { mutableStateOf(false) }
     val (isValid, errorMsg) = validation
     OutlinedTextField(
         value = fieldValue,
         onValueChange = {
             onValueChange(it)
         },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .onFocusChanged { focusState ->
+                hasFocus = focusState.hasFocus
+                onFocusChanged(hasFocus)
+            },
         colors = TextFieldDefaults.outlinedTextFieldColors(
             focusedBorderColor = if (isValid) BrandColor else Color.Red,
             unfocusedBorderColor = if (isValid) BorderColor else Color.Red,
@@ -182,6 +191,21 @@ fun PasswordInputComponent(
         Text(
             text = errorMsg,
             color = Color.Red,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(top = 5.dp)
+        )
+    } else if (isValid && isRegisterPassword && fieldValue.isNotEmpty() && !hasFocus) {
+        val passwordStrength = PasswordValidator().passwordStrength(fieldValue)
+
+        val (strengthLabel, strengthColor) = when (passwordStrength) {
+            "Strong" -> "Strong Password" to BrandColor
+            "Medium" -> "Medium Password" to Color.Yellow
+            else -> "Weak Password" to Color.Red
+        }
+
+        Text(
+            text = strengthLabel,
+            color = strengthColor,
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(top = 5.dp)
         )

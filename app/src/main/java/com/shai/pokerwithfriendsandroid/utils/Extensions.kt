@@ -13,3 +13,13 @@ fun String.validateEmail(): Pair<Boolean, String> {
         else -> Pair(true, "")
     }
 }
+
+fun String.validateName(): Pair<Boolean, String> {
+    return when {
+        this.isEmpty() -> {
+            Pair(false, "Name can't be empty")
+        }
+
+        else -> Pair(true, "")
+    }
+}

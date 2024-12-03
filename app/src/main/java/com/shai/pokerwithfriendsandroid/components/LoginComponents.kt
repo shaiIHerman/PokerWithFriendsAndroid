@@ -44,7 +44,7 @@ import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
 import com.shai.pokerwithfriendsandroid.viewmodels.LoginViewModel
 
 @Composable
-fun EmailField(viewModel: LoginViewModel) {
+fun EmailField(viewModel: LoginViewModel, isRegister: Boolean) {
     val email by viewModel.email.observeAsState("")
     val isValidEmail by viewModel.isEmailValid.observeAsState(Pair(true, ""))
     var hasInteracted by remember { mutableStateOf(false) }
@@ -56,34 +56,52 @@ fun EmailField(viewModel: LoginViewModel) {
     }
 
     MyTextField(
-        labelVal = "E-mail",
-        fieldValue = email,
-        vector = Icons.Filled.Email,
-        onValueChange = {
-            hasInteracted = true
+        labelVal = "E-mail", fieldValue = email, vector = Icons.Filled.Email, onValueChange = {
+            if (isRegister) {
+                hasInteracted = true
+            }
             viewModel.updateEmail(it)
-        },
-        validation = isValidEmail,
-        onFocusChanged = onEmailFocusChanged // Pass focus change handler
+        }, validation = isValidEmail, onFocusChanged = onEmailFocusChanged
     )
 }
 
 @Composable
 fun NameField(viewModel: LoginViewModel) {
     val name by viewModel.name.observeAsState("")
+    val isValidName by viewModel.isNameValid.observeAsState(Pair(true, ""))
     MyTextField(
         labelVal = "Name",
         vector = Icons.Filled.Face,
         fieldValue = name,
+        validation = isValidName,
         onValueChange = viewModel::updateName
     )
 }
 
 @Composable
-fun PasswordField(viewModel: LoginViewModel) {
+fun PasswordField(viewModel: LoginViewModel, isRegister: Boolean) {
     val password by viewModel.password.observeAsState("")
+    val isPasswordValid by viewModel.isPasswordValid.observeAsState(Pair(true, ""))
+    var hasInteracted by remember { mutableStateOf(false) }
+
+    val onPasswordFocusChanged: (Boolean) -> Unit = { hasFocus ->
+        if (!hasFocus && hasInteracted) {
+            viewModel.validatePassword()
+        }
+    }
+
     PasswordInputComponent(
-        placeholder = "Password", fieldValue = password, onValueChange = viewModel::updatePassword
+        placeholder = "Password",
+        fieldValue = password,
+        onValueChange = {
+            if (isRegister) {
+                hasInteracted = true
+            }
+            viewModel.updatePassword(it)
+        },
+        validation = isPasswordValid,
+        onFocusChanged = onPasswordFocusChanged,
+        isRegisterPassword = isRegister
     )
 }
 
@@ -95,7 +113,8 @@ fun ConfirmPasswordField(viewModel: LoginViewModel) {
         placeholder = "Confirm Password",
         fieldValue = password,
         onValueChange = viewModel::updateConfirmPassword,
-        validation = isConfirmPasswordValid
+        validation = isConfirmPasswordValid,
+        isRegisterPassword = false
     )
 }
 

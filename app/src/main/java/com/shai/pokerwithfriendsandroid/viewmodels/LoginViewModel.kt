@@ -11,7 +11,9 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.shai.pokerwithfriendsandroid.auth.AuthService
 import com.shai.pokerwithfriendsandroid.screens.states.AuthState
 import com.shai.pokerwithfriendsandroid.screens.states.LoginScreenState
+import com.shai.pokerwithfriendsandroid.utils.PasswordValidator
 import com.shai.pokerwithfriendsandroid.utils.validateEmail
+import com.shai.pokerwithfriendsandroid.utils.validateName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,8 +40,14 @@ class LoginViewModel @Inject constructor(
     private val _password = MutableLiveData("")
     val password: LiveData<String> = _password
 
+    private val _isPasswordValid = MutableLiveData(Pair(true, ""))
+    val isPasswordValid: LiveData<Pair<Boolean, String>> = _isPasswordValid
+
     private val _name = MutableLiveData("")
     val name: LiveData<String> = _name
+
+    private val _isNameValid = MutableLiveData(Pair(true, ""))
+    val isNameValid: LiveData<Pair<Boolean, String>> = _isNameValid
 
     private val _confirmPassword = MutableLiveData("")
     val confirmPassword: LiveData<String> = _confirmPassword
@@ -126,13 +134,12 @@ class LoginViewModel @Inject constructor(
     }
 
     fun signUpWithEmail() {
-        _isEmailValid.value = _email.value?.validateEmail()
-        _isPasswordConfirmValid.value = if (password == confirmPassword) {
-            Pair(true, "")
-        } else {
-            Pair(false, "Passwords don't match")
-        }
-        if (_isEmailValid.value?.first == false || _isPasswordConfirmValid.value?.first == false) {
+        validateEmail()
+        validateName()
+        validatePassword()
+        validateConfirmPassword()
+
+        if (_isEmailValid.value?.first == false || _isPasswordConfirmValid.value?.first == false || _isPasswordValid.value?.first == false || _isNameValid.value?.first == false) {
             return
         } else {
             viewModelScope.launch {
@@ -149,7 +156,20 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+    private fun validateName() {
+        _isNameValid.value = _name.value?.validateName()
+    }
+
+    private fun validateConfirmPassword() {
+        _isPasswordConfirmValid.value =
+            PasswordValidator().checkConfirmPassword(_password.value, confirmPassword.value)
+    }
+
     fun validateEmail() {
         _isEmailValid.value = _email.value?.validateEmail()
+    }
+
+    fun validatePassword() {
+        _isPasswordValid.value = PasswordValidator().validate(password.value!!)
     }
 }

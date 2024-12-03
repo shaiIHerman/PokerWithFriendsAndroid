@@ -125,7 +125,7 @@ fun LoginView(
     Column {
         AuthTopPart(state = LoginScreenState.Login, viewModel)
         Spacer(modifier = Modifier.height(16.dp))
-        PasswordField(viewModel)
+        PasswordField(viewModel, isRegister = false)
         Spacer(modifier = Modifier.height(8.dp))
         ForgotPasswordLink { viewModel.onForgotPassword() }
         BottomComponent(LoginScreenState.Login, onGoogleLoginClick = onGoogleLoginClick) {
@@ -148,12 +148,11 @@ fun RegisterView(
         Spacer(modifier = Modifier.height(16.dp))
         NameField(viewModel)
         Spacer(modifier = Modifier.height(16.dp))
-        PasswordField(viewModel)
+        PasswordField(viewModel, true)
         Spacer(modifier = Modifier.height(16.dp))
         ConfirmPasswordField(viewModel)
         BottomComponent(
-            LoginScreenState.Register,
-            onGoogleLoginClick = onGoogleLoginClick
+            LoginScreenState.Register, onGoogleLoginClick = onGoogleLoginClick
         ) { viewModel.signUpWithEmail() }
         Spacer(modifier = Modifier.height(12.dp))
         Spacer(modifier = Modifier.weight(1f))
@@ -167,5 +166,5 @@ fun RegisterView(
 fun AuthTopPart(state: LoginScreenState, viewModel: LoginViewModel) {
     HeadingText(state)
     Spacer(modifier = Modifier.height(16.dp))
-    EmailField(viewModel)
+    EmailField(viewModel, isRegister = state == LoginScreenState.Register)
 }

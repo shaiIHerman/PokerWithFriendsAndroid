@@ -20,6 +20,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -43,11 +46,25 @@ import com.shai.pokerwithfriendsandroid.viewmodels.LoginViewModel
 @Composable
 fun EmailField(viewModel: LoginViewModel) {
     val email by viewModel.email.observeAsState("")
+    val isValidEmail by viewModel.isEmailValid.observeAsState(Pair(true, ""))
+    var hasInteracted by remember { mutableStateOf(false) }
+
+    val onEmailFocusChanged: (Boolean) -> Unit = { hasFocus ->
+        if (!hasFocus && hasInteracted) {
+            viewModel.validateEmail()
+        }
+    }
+
     MyTextField(
         labelVal = "E-mail",
-        vector = Icons.Filled.Email,
         fieldValue = email,
-        onValueChange = viewModel::updateEmail
+        vector = Icons.Filled.Email,
+        onValueChange = {
+            hasInteracted = true
+            viewModel.updateEmail(it)
+        },
+        validation = isValidEmail,
+        onFocusChanged = onEmailFocusChanged // Pass focus change handler
     )
 }
 
@@ -66,19 +83,19 @@ fun NameField(viewModel: LoginViewModel) {
 fun PasswordField(viewModel: LoginViewModel) {
     val password by viewModel.password.observeAsState("")
     PasswordInputComponent(
-        placeholder = "Password",
-        fieldValue = password,
-        onValueChange = viewModel::updatePassword
+        placeholder = "Password", fieldValue = password, onValueChange = viewModel::updatePassword
     )
 }
 
 @Composable
 fun ConfirmPasswordField(viewModel: LoginViewModel) {
     val password by viewModel.confirmPassword.observeAsState("")
+    val isConfirmPasswordValid by viewModel.isPasswordConfirmValid.observeAsState(Pair(true, ""))
     PasswordInputComponent(
         placeholder = "Confirm Password",
         fieldValue = password,
-        onValueChange = viewModel::updateConfirmPassword
+        onValueChange = viewModel::updateConfirmPassword,
+        validation = isConfirmPasswordValid
     )
 }
 
@@ -111,9 +128,7 @@ fun ForgotPasswordLink(onClick: () -> Unit) {
 
 @Composable
 fun BottomComponent(
-    screenMode: LoginScreenState,
-    onGoogleLoginClick: () -> Unit = {},
-    onPrimaryBtnClick: () -> Unit
+    screenMode: LoginScreenState, onGoogleLoginClick: () -> Unit = {}, onPrimaryBtnClick: () -> Unit
 ) {
     Column {
         PrimaryButton(
@@ -121,8 +136,8 @@ fun BottomComponent(
                 screenMode.isLogin() -> "Login"
                 screenMode.isRegister() -> "Sign Up"
                 else -> "Submit"
-            }
-        , onPrimaryBtnClick = onPrimaryBtnClick)
+            }, onPrimaryBtnClick = onPrimaryBtnClick
+        )
         if (!screenMode.isForgot()) {
             Spacer(modifier = Modifier.height(10.dp))
             DividerWithText()

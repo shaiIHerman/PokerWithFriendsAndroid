@@ -1,6 +1,5 @@
 package com.shai.pokerwithfriendsandroid.components
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -30,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -41,7 +41,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.LiveData
 import com.shai.pokerwithfriendsandroid.R
 import com.shai.pokerwithfriendsandroid.ui.theme.BorderColor
 import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
@@ -76,28 +75,29 @@ fun MyTextField(
     icon: Int? = null,
     vector: ImageVector? = null,
     fieldValue: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    validation: Pair<Boolean, String> = Pair(true, ""),
+    onFocusChanged: (Boolean) -> Unit = {}
 ) {
     val typeOfKeyboard: KeyboardType = when (labelVal) {
         "email ID" -> KeyboardType.Email
         "mobile" -> KeyboardType.Phone
         else -> KeyboardType.Text
     }
-
+    val (isValid, errorMsg) = validation
     OutlinedTextField(
         value = fieldValue,
         onValueChange = { newValue: String ->
-            run {
-                Log.d("TAG", "MyTextField: $newValue")
-                onValueChange(newValue)
-            }
+            onValueChange(newValue)
         },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .onFocusChanged { focusState -> onFocusChanged(focusState.hasFocus) },
         colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedBorderColor = BrandColor,
-            unfocusedBorderColor = BorderColor,
-            focusedLeadingIconColor = BrandColor,
-            unfocusedLeadingIconColor = Tertirary
+            focusedBorderColor = if (isValid) BrandColor else Color.Red,
+            unfocusedBorderColor = if (isValid) BorderColor else Color.Red,
+            focusedLeadingIconColor = if (isValid) BrandColor else Color.Red,
+            unfocusedLeadingIconColor = if (isValid) Tertirary else Color.Red
         ),
         shape = MaterialTheme.shapes.small,
         placeholder = { Text(text = labelVal, color = Tertirary) },
@@ -117,16 +117,29 @@ fun MyTextField(
         ),
         singleLine = true
     )
+
+    if (!isValid && errorMsg.isNotBlank()) {
+        Text(
+            text = errorMsg,
+            color = Color.Red,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(top = 5.dp)
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PasswordInputComponent(
-    placeholder: String, fieldValue: String, onValueChange: (String) -> Unit
+    placeholder: String,
+    fieldValue: String,
+    onValueChange: (String) -> Unit,
+    validation: Pair<Boolean, String> = Pair(true, ""),
 ) {
     var isShowPassword by remember {
         mutableStateOf(false)
     }
+    val (isValid, errorMsg) = validation
     OutlinedTextField(
         value = fieldValue,
         onValueChange = {
@@ -134,8 +147,10 @@ fun PasswordInputComponent(
         },
         modifier = Modifier.fillMaxWidth(),
         colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedBorderColor = BrandColor,
-            unfocusedBorderColor = BorderColor,
+            focusedBorderColor = if (isValid) BrandColor else Color.Red,
+            unfocusedBorderColor = if (isValid) BorderColor else Color.Red,
+            focusedLeadingIconColor = if (isValid) BrandColor else Color.Red,
+            unfocusedLeadingIconColor = if (isValid) Tertirary else Color.Red
         ),
         shape = MaterialTheme.shapes.small,
         placeholder = {
@@ -163,6 +178,14 @@ fun PasswordInputComponent(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         visualTransformation = if (isShowPassword) VisualTransformation.None else PasswordVisualTransformation()
     )
+    if (!isValid && errorMsg.isNotBlank()) {
+        Text(
+            text = errorMsg,
+            color = Color.Red,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(top = 5.dp)
+        )
+    }
 }
 
 @Composable

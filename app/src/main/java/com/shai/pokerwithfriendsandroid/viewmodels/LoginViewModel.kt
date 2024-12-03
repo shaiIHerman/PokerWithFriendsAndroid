@@ -11,6 +11,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.shai.pokerwithfriendsandroid.auth.AuthService
 import com.shai.pokerwithfriendsandroid.screens.states.AuthState
 import com.shai.pokerwithfriendsandroid.screens.states.LoginScreenState
+import com.shai.pokerwithfriendsandroid.utils.validateEmail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +32,9 @@ class LoginViewModel @Inject constructor(
     private val _email = MutableLiveData("")
     val email: LiveData<String> = _email
 
+    private val _isEmailValid = MutableLiveData(Pair(true, ""))
+    val isEmailValid: LiveData<Pair<Boolean, String>> = _isEmailValid
+
     private val _password = MutableLiveData("")
     val password: LiveData<String> = _password
 
@@ -39,6 +43,9 @@ class LoginViewModel @Inject constructor(
 
     private val _confirmPassword = MutableLiveData("")
     val confirmPassword: LiveData<String> = _confirmPassword
+
+    private val _isPasswordConfirmValid = MutableLiveData(Pair(true, ""))
+    val isPasswordConfirmValid: LiveData<Pair<Boolean, String>> = _isPasswordConfirmValid
 
     private val _signInClient = MutableLiveData(authService.getGoogleSignInClient())
     val googleSignInClient: LiveData<GoogleSignInClient> = _signInClient
@@ -99,27 +106,50 @@ class LoginViewModel @Inject constructor(
     }
 
     // Login with Email/Password
-    fun loginWithEmail() = viewModelScope.launch {
-        _authState.value = AuthState.SigningIn
-        val user = authService.loginWithEmail(email.value!!, password.value!!)
-        if (user != null) {
-            _authState.value = AuthState.Authenticated
-            Log.d("LoginViewModel", "Login successful")
+    fun loginWithEmail() {
+        _isEmailValid.value = _email.value?.validateEmail()
+        if (_isEmailValid.value?.first == false) {
+            return
         } else {
-            _authState.value = AuthState.Error("Authentication failed")
-            Log.e("LoginViewModel", "Login failed")
+            viewModelScope.launch {
+                _authState.value = AuthState.SigningIn
+                val user = authService.loginWithEmail(email.value!!, password.value!!)
+                if (user != null) {
+                    _authState.value = AuthState.Authenticated
+                    Log.d("LoginViewModel", "Login successful")
+                } else {
+                    _authState.value = AuthState.Error("Authentication failed")
+                    Log.e("LoginViewModel", "Login failed")
+                }
+            }
         }
     }
 
-    fun signUpWithEmail() = viewModelScope.launch {
-        _authState.value = AuthState.SigningIn
-        val user = authService.signUpWithEmail(email.value!!, password.value!!)
-        if (user != null) {
-            _authState.value = AuthState.Authenticated
-            Log.d("LoginViewModel", "Login successful")
+    fun signUpWithEmail() {
+        _isEmailValid.value = _email.value?.validateEmail()
+        _isPasswordConfirmValid.value = if (password == confirmPassword) {
+            Pair(true, "")
         } else {
-            _authState.value = AuthState.Error("Authentication failed")
-            Log.e("LoginViewModel", "Login failed")
+            Pair(false, "Passwords don't match")
         }
+        if (_isEmailValid.value?.first == false || _isPasswordConfirmValid.value?.first == false) {
+            return
+        } else {
+            viewModelScope.launch {
+                _authState.value = AuthState.SigningIn
+                val user = authService.signUpWithEmail(email.value!!, password.value!!)
+                if (user != null) {
+                    _authState.value = AuthState.Authenticated
+                    Log.d("LoginViewModel", "Login successful")
+                } else {
+                    _authState.value = AuthState.Error("Authentication failed")
+                    Log.e("LoginViewModel", "Login failed")
+                }
+            }
+        }
+    }
+
+    fun validateEmail() {
+        _isEmailValid.value = _email.value?.validateEmail()
     }
 }

@@ -212,16 +212,7 @@ fun PasswordInputComponent(
     }
 }
 
-@Composable
-fun ForgotPasswordTextComponent(onClick: () -> Unit) {
-    Text(
-        text = "Forgot Password?",
-        color = BrandColor,
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        modifier = Modifier.clickable(onClick = onClick)
-    )
-}
+
 
 @Composable
 fun PrimaryButton(labelVal: String, onPrimaryBtnClick: () -> Unit = {}) {

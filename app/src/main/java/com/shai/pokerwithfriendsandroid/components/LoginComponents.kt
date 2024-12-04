@@ -2,6 +2,7 @@ package com.shai.pokerwithfriendsandroid.components
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -173,6 +174,17 @@ fun ForgotPasswordHeadingTextComponent(action: String) {
         HeadingTextComponent(parts.first())
         HeadingTextComponent(parts.last())
     }
+}
+
+@Composable
+fun ForgotPasswordTextComponent(onClick: () -> Unit) {
+    Text(
+        text = "Forgot Password?",
+        color = BrandColor,
+        fontWeight = FontWeight.Bold,
+        fontSize = 16.sp,
+        modifier = Modifier.clickable(onClick = onClick)
+    )
 }
 
 @Composable

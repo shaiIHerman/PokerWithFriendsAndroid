@@ -9,6 +9,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.GoogleAuthProvider
 import com.shai.pokerwithfriendsandroid.auth.AuthService
+import com.shai.pokerwithfriendsandroid.repositories.UserRepository
 import com.shai.pokerwithfriendsandroid.screens.states.AuthState
 import com.shai.pokerwithfriendsandroid.screens.states.LoginScreenState
 import com.shai.pokerwithfriendsandroid.utils.PasswordValidator
@@ -22,7 +23,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authService: AuthService
+    private val authService: AuthService, private val userRepository: UserRepository
 ) : ViewModel() {
 
     private var _screenMode = MutableStateFlow<LoginScreenState>(LoginScreenState.Login)
@@ -134,26 +135,49 @@ class LoginViewModel @Inject constructor(
     }
 
     fun signUpWithEmail() {
-        validateEmail()
-        validateName()
-        validatePassword()
-        validateConfirmPassword()
+        // Validate fields
+        val validations = listOf(
+            ::validateEmail to _isEmailValid,
+            ::validateName to _isNameValid,
+            ::validatePassword to _isPasswordValid,
+            ::validateConfirmPassword to _isPasswordConfirmValid
+        )
 
-        if (_isEmailValid.value?.first == false || _isPasswordConfirmValid.value?.first == false || _isPasswordValid.value?.first == false || _isNameValid.value?.first == false) {
+        // Run all validations
+        validations.forEach { (validate, _) ->
+            validate()
+        }
+
+        // Check for validation errors
+        if (hasValidationErrors()) {
+            _authState.value = AuthState.Error("Authentication failed")
+            Log.e("LoginViewModel", "Login failed")
             return
-        } else {
-            viewModelScope.launch {
-                _authState.value = AuthState.SigningIn
-                val user = authService.signUpWithEmail(email.value!!, password.value!!)
-                if (user != null) {
-                    _authState.value = AuthState.Authenticated
-                    Log.d("LoginViewModel", "Login successful")
-                } else {
-                    _authState.value = AuthState.Error("Authentication failed")
-                    Log.e("LoginViewModel", "Login failed")
-                }
+        }
+
+        // Proceed with user registration
+        viewModelScope.launch {
+            _authState.value = AuthState.SigningIn
+            val user = userRepository.registerNewUser(
+                email = _email.value!!, password = _password.value!!, name = _name.value!!
+            ).onSuccess {
+                _authState.value = AuthState.Authenticated
+                Log.d("LoginViewModel", "Login successful")
+            }.onFailure {
+                _authState.value = AuthState.Error("Authentication failed")
+                Log.e("LoginViewModel", "Login failed")
             }
         }
+    }
+
+    // Helper function to check for validation errors
+    private fun hasValidationErrors(): Boolean {
+        return listOf(
+            _isEmailValid.value,
+            _isPasswordConfirmValid.value,
+            _isPasswordValid.value,
+            _isNameValid.value
+        ).any { it?.first == false || it == null }
     }
 
     private fun validateName() {

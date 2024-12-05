@@ -1,8 +1,10 @@
 package com.shai.pokerwithfriendsandroid.db.remote
 
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.shai.pokerwithfriendsandroid.db.remote.models.User
+import com.shai.pokerwithfriendsandroid.repositories.AuthUser
 import kotlinx.coroutines.tasks.await
 
 class FireStoreClient {
@@ -17,12 +19,33 @@ class FireStoreClient {
         }
     }
 
-    private inline fun <T> safeApiCall(apiCall: () -> T): ApiOperation<T> {
-        return try {
-            ApiOperation.Success(data = apiCall())
-        } catch (e: Exception) {
-            ApiOperation.Failure(e)
+    suspend inline fun <reified T> getDocument(documentReference: DocumentReference): ApiOperation<T?> {
+        return safeApiCall {
+            documentReference.get().await().toObject(T::class.java)
         }
+    }
+
+    suspend fun setUserDocumentData(
+        documentReference: DocumentReference, authUser: AuthUser, name: String
+    ): Void {
+        val userData = hashMapOf(
+            "email" to authUser.email,
+            "name" to name,  // Customize as needed
+        )
+        return documentReference.set(userData).await()
+    }
+
+
+    fun createDocument(collectionName: String, docId: String): DocumentReference {
+        return firestore.collection(collectionName).document(docId)
+    }
+}
+
+suspend fun <T> safeApiCall(apiCall: suspend () -> T): ApiOperation<T> {
+    return try {
+        ApiOperation.Success(data = apiCall())
+    } catch (e: Exception) {
+        ApiOperation.Failure(e)
     }
 }
 

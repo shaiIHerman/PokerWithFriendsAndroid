@@ -10,6 +10,9 @@ import javax.inject.Inject
 class UserRepository @Inject constructor(
     private val authService: AuthService, private val fireStoreClient: FireStoreClient
 ) {
+
+    private var userCache: User? = null
+    
     suspend fun registerNewUser(
         email: String,
         password: String,
@@ -19,7 +22,8 @@ class UserRepository @Inject constructor(
         return safeApiCall {
             val documentReference = fireStoreClient.createDocument("users", authUser?.uid ?: "")
             fireStoreClient.setUserDocumentData(documentReference, authUser?.email ?: "", name)
-            fireStoreClient.getDocument<User>(documentReference)
+            userCache = fireStoreClient.getDocument<User>(documentReference)
+            userCache
         }
     }
 
@@ -29,7 +33,8 @@ class UserRepository @Inject constructor(
     ): ApiOperation<User?> {
         val authUser = authService.loginWithEmail(email, password)
         return safeApiCall {
-            fireStoreClient.getDocument<User>(collectionName = "users", docId = authUser?.uid ?: "")
+            userCache = fireStoreClient.getDocument<User>(collectionName = "users", docId = authUser?.uid ?: "")
+            userCache
         }
     }
 }

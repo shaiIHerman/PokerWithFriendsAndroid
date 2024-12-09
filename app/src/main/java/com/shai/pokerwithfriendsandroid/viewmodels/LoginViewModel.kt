@@ -122,14 +122,14 @@ class LoginViewModel @Inject constructor(
         } else {
             viewModelScope.launch {
                 _authState.value = AuthState.SigningIn
-                val user = authService.loginWithEmail(email.value!!, password.value!!)
-                if (user != null) {
+                userRepository.loginUser(email.value!!, password.value!!).onSuccess { user ->
                     _authState.value = AuthState.Authenticated
-                    Log.d("LoginViewModel", "Login successful")
-                } else {
+                    Log.d("LoginViewModel", "Login successful - ${user?.name}")
+                }.onFailure {
                     _authState.value = AuthState.Error("Authentication failed")
-                    Log.e("LoginViewModel", "Login failed")
+                    Log.e("LoginViewModel", "Login failed - ${it.message}")
                 }
+
             }
         }
     }
@@ -158,14 +158,14 @@ class LoginViewModel @Inject constructor(
         // Proceed with user registration
         viewModelScope.launch {
             _authState.value = AuthState.SigningIn
-            val user = userRepository.registerNewUser(
+            userRepository.registerNewUser(
                 email = _email.value!!, password = _password.value!!, name = _name.value!!
-            ).onSuccess {
+            ).onSuccess { user ->
                 _authState.value = AuthState.Authenticated
-                Log.d("LoginViewModel", "Login successful")
+                Log.d("LoginViewModel", "Login successful - ${user?.name}")
             }.onFailure {
                 _authState.value = AuthState.Error("Authentication failed")
-                Log.e("LoginViewModel", "Login failed")
+                Log.e("LoginViewModel", "Login failed - ${it.message}")
             }
         }
     }

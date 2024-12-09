@@ -1,15 +1,15 @@
 package com.shai.pokerwithfriendsandroid.db.remote
 
+import android.util.Log
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.shai.pokerwithfriendsandroid.db.remote.models.User
-import com.shai.pokerwithfriendsandroid.repositories.AuthUser
 import kotlinx.coroutines.tasks.await
 
 class FireStoreClient {
 
-    private val firestore = Firebase.firestore
+    val firestore = Firebase.firestore
 
     suspend fun getUsers(): ApiOperation<List<User>> {
         return safeApiCall {
@@ -19,22 +19,35 @@ class FireStoreClient {
         }
     }
 
-    suspend inline fun <reified T> getDocument(documentReference: DocumentReference): ApiOperation<T?> {
-        return safeApiCall {
-            documentReference.get().await().toObject(T::class.java)
-        }
+    suspend inline fun <reified T> getDocument(documentReference: DocumentReference): T? {
+        return documentReference.get().await().toObject(T::class.java)
     }
 
-    suspend fun setUserDocumentData(
-        documentReference: DocumentReference, authUser: AuthUser, name: String
-    ): Void {
-        val userData = hashMapOf(
-            "email" to authUser.email,
-            "name" to name,  // Customize as needed
-        )
-        return documentReference.set(userData).await()
+    suspend inline fun <reified T> getDocument(collectionName: String, docId: String): T? {
+        return firestore.collection(collectionName).document(docId).get().await().toObject(T::class.java)
     }
 
+suspend fun setUserDocumentData(
+    documentReference: DocumentReference, email: String, name: String
+) {
+    // Validate inputs
+    if (email.isEmpty() || name.isEmpty()) {
+        throw IllegalArgumentException("Email or Name cannot be null or empty.")
+    }
+
+    Log.d("FirestoreClient", "Document Reference: ${documentReference.path}")
+
+    val userData = hashMapOf(
+        "email" to email,
+        "name" to name
+    )
+
+    try {
+        documentReference.set(userData).await()
+    } catch (e: Exception) {
+        Log.e("FirestoreClient", "Error setting user data: ${e.message}", e)
+    }
+}
 
     fun createDocument(collectionName: String, docId: String): DocumentReference {
         return firestore.collection(collectionName).document(docId)

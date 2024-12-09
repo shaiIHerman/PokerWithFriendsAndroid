@@ -1,5 +1,6 @@
 package com.shai.pokerwithfriendsandroid.repositories
 
+import com.google.firebase.auth.AuthCredential
 import com.shai.pokerwithfriendsandroid.auth.AuthService
 import com.shai.pokerwithfriendsandroid.db.remote.ApiOperation
 import com.shai.pokerwithfriendsandroid.db.remote.FireStoreClient
@@ -12,11 +13,9 @@ class UserRepository @Inject constructor(
 ) {
 
     private var userCache: User? = null
-    
+
     suspend fun registerNewUser(
-        email: String,
-        password: String,
-        name: String
+        email: String, password: String, name: String
     ): ApiOperation<User?> {
         val authUser = authService.signUpWithEmail(email, password)
         return safeApiCall {
@@ -33,8 +32,34 @@ class UserRepository @Inject constructor(
     ): ApiOperation<User?> {
         val authUser = authService.loginWithEmail(email, password)
         return safeApiCall {
-            userCache = fireStoreClient.getDocument<User>(collectionName = "users", docId = authUser?.uid ?: "")
+            userCache = fireStoreClient.getDocument<User>(
+                collectionName = "users",
+                docId = authUser?.uid ?: ""
+            )
             userCache
+        }
+    }
+
+    suspend fun loginWithGoogle(credential: AuthCredential): ApiOperation<User?> {
+        val authUser = authService.loginWithGoogle(credential)
+        return safeApiCall {
+            val userExists = fireStoreClient.getDocument<User>(
+                collectionName = "users",
+                docId = authUser?.uid ?: ""
+            )
+            if (userExists != null) {
+                userCache = userExists
+                userCache
+            } else {
+                val documentReference = fireStoreClient.createDocument("users", authUser?.uid ?: "")
+                fireStoreClient.setUserDocumentData(
+                    documentReference,
+                    authUser?.email ?: "",
+                    authUser?.displayName ?: ""
+                )
+                userCache = fireStoreClient.getDocument<User>(documentReference)
+                userCache
+            }
         }
     }
 }

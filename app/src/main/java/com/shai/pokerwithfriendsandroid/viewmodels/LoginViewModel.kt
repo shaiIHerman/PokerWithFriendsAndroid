@@ -92,17 +92,15 @@ class LoginViewModel @Inject constructor(
     fun signInWithGoogle(account: GoogleSignInAccount) {
         val credential = GoogleAuthProvider.getCredential(account.idToken, null)
         viewModelScope.launch {
-            try {
-                _authState.value = AuthState.SigningIn
-                val result = authService.loginWithGoogle(credential)
-                if (result?.uid != null) {
-                    _authState.value = AuthState.Authenticated
-                } else {
-                    _authState.value = AuthState.Error("Authentication failed")
-                }
-            } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message.toString())
+            _authState.value = AuthState.SigningIn
+            userRepository.loginWithGoogle(credential).onSuccess { user ->
+                _authState.value = AuthState.Authenticated
+                Log.d("LoginViewModel", "Login successful - ${user?.name}")
+            }.onFailure {
+                _authState.value = AuthState.Error("Authentication failed")
+                Log.e("LoginViewModel", "Login failed - ${it.message}")
             }
+
         }
     }
 

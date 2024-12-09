@@ -19,7 +19,7 @@ class UserRepository @Inject constructor(
     ): ApiOperation<User?> {
         val authUser = authService.signUpWithEmail(email, password)
         return safeApiCall {
-            val documentReference = fireStoreClient.createDocument("users", authUser?.uid ?: "")
+            val documentReference = fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
             fireStoreClient.setUserDocumentData(documentReference, authUser?.email ?: "", name)
             userCache = fireStoreClient.getDocument<User>(documentReference)
             userCache
@@ -51,7 +51,7 @@ class UserRepository @Inject constructor(
                 userCache = userExists
                 userCache
             } else {
-                val documentReference = fireStoreClient.createDocument("users", authUser?.uid ?: "")
+                val documentReference = fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
                 fireStoreClient.setUserDocumentData(
                     documentReference,
                     authUser?.email ?: "",

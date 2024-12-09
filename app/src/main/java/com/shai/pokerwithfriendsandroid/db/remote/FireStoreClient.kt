@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
 import com.shai.pokerwithfriendsandroid.db.remote.models.User
 import kotlinx.coroutines.tasks.await
 
@@ -24,33 +25,49 @@ class FireStoreClient {
     }
 
     suspend inline fun <reified T> getDocument(collectionName: String, docId: String): T? {
-        return firestore.collection(collectionName).document(docId).get().await().toObject(T::class.java)
+        return firestore.collection(collectionName).document(docId).get().await()
+            .toObject(T::class.java)
     }
 
-suspend fun setUserDocumentData(
-    documentReference: DocumentReference, email: String, name: String
-) {
-    // Validate inputs
-    if (email.isEmpty() || name.isEmpty()) {
-        throw IllegalArgumentException("Email or Name cannot be null or empty.")
+    suspend fun setUserDocumentData(
+        documentReference: DocumentReference, email: String, name: String
+    ) {
+        // Validate inputs
+        if (email.isEmpty() || name.isEmpty()) {
+            throw IllegalArgumentException("Email or Name cannot be null or empty.")
+        }
+
+        Log.d("FirestoreClient", "Document Reference: ${documentReference.path}")
+
+        val userData = hashMapOf(
+            "email" to email, "name" to name
+        )
+
+        try {
+            documentReference.set(userData).await()
+        } catch (e: Exception) {
+            Log.e("FirestoreClient", "Error setting user data: ${e.message}", e)
+        }
     }
 
-    Log.d("FirestoreClient", "Document Reference: ${documentReference.path}")
-
-    val userData = hashMapOf(
-        "email" to email,
-        "name" to name
-    )
-
-    try {
-        documentReference.set(userData).await()
-    } catch (e: Exception) {
-        Log.e("FirestoreClient", "Error setting user data: ${e.message}", e)
+    suspend fun createDocument(collectionName: String, data: Any): DocumentReference {
+        return firestore.collection(collectionName).add(data).await()
     }
-}
 
-    fun createDocument(collectionName: String, docId: String): DocumentReference {
+    fun getDocumentReference(collectionName: String, docId: String): DocumentReference {
         return firestore.collection(collectionName).document(docId)
+    }
+
+    suspend fun fetchTournaments(): List<Tournament> {
+        // Imagine you're fetching data from Firebase Firestore
+        // For example purposes, we'll return a mock list
+        return listOf(
+            Tournament(id = "3", name = "Spring Championship", gamesPlayed = 7)
+        )
+    }
+
+    fun addTournament(tournament: Tournament) {
+
     }
 }
 

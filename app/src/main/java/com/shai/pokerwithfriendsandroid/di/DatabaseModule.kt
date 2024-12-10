@@ -3,6 +3,7 @@ package com.shai.pokerwithfriendsandroid.di
 import android.content.Context
 import androidx.room.Room
 import com.shai.pokerwithfriendsandroid.db.local.AppDatabase
+import com.shai.pokerwithfriendsandroid.db.local.daos.SyncInfoDao
 import com.shai.pokerwithfriendsandroid.db.local.daos.TournamentDao
 import dagger.Module
 import dagger.Provides
@@ -30,5 +31,11 @@ object DatabaseModule {
     @Singleton
     fun provideTournamentDao(appDatabase: AppDatabase): TournamentDao {
         return appDatabase.tournamentDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSyncInfoDao(appDatabase: AppDatabase): SyncInfoDao {
+        return appDatabase.SyncInfoDao()
     }
 }

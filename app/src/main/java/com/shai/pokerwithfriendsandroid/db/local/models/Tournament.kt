@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class Tournament(
     @PrimaryKey val id: String,
     val name: String,
-    val gamesPlayed: Int
+    val gamesPlayed: Int,
+    val dateCreated: Long = 0
 )

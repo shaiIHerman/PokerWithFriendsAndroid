@@ -1,6 +1,7 @@
 package com.shai.pokerwithfriendsandroid.db.remote
 
 import android.util.Log
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -58,16 +59,30 @@ class FireStoreClient {
         return firestore.collection(collectionName).document(docId)
     }
 
-    suspend fun fetchTournaments(): List<Tournament> {
-        // Imagine you're fetching data from Firebase Firestore
-        // For example purposes, we'll return a mock list
-        return listOf(
-            Tournament(id = "3", name = "Spring Championship", gamesPlayed = 7)
-        )
-    }
+    suspend fun fetchTournaments(lastSyncTimestamp: Long?): List<Tournament> {
+        var firestoreTimestamp = Timestamp(0, 0)
+        // Here we convert the lastSyncTimestamp to a Timestamp object compatible with Firestore
+        if (lastSyncTimestamp != null) {
+            val seconds = lastSyncTimestamp / 1000
+            val nanoseconds = (lastSyncTimestamp % 1000) * 1000000
+            firestoreTimestamp = Timestamp(seconds, nanoseconds.toInt())
+        }
 
-    fun addTournament(tournament: Tournament) {
+        val query =
+            firestore.collection("tournaments").whereGreaterThan("dateCreated", firestoreTimestamp)
+                .get().await()
 
+        return query.documents.map { document ->
+            val name = document.getString("name") ?: ""
+            val gamesPlayed = document.getLong("gamesPlayed")?.toInt() ?: 0
+            val dateCreated =
+                document.getTimestamp("dateCreated")?.toDate()?.time ?: System.currentTimeMillis()
+            val id = document.id  // Firestore document ID
+            Log.d("FireStoreClient", "Document ID: $id")
+            Tournament(
+                id = id, name = name, gamesPlayed = gamesPlayed, dateCreated = dateCreated
+            )
+        }
     }
 }
 

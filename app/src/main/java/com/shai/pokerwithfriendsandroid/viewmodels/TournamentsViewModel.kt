@@ -19,11 +19,7 @@ class TournamentsViewModel @Inject constructor(
     private val _state = MutableStateFlow<TournamentsViewState>(TournamentsViewState.Loading)
     val state: StateFlow<TournamentsViewState> = _state
 
-    init {
-        fetchTournaments()
-    }
-
-    private fun fetchTournaments() {
+    fun fetchTournaments() {
         viewModelScope.launch {
             try {
                 _state.value = TournamentsViewState.Loading
@@ -35,12 +31,11 @@ class TournamentsViewModel @Inject constructor(
         }
     }
 
-    fun addTournament(tournament: Tournament) {
+    fun addTournament() {
         viewModelScope.launch {
             try {
-                // Insert the new tournament into the repository (both local and remote)
-                tournamentRepository.addTournament(tournament)
-                fetchTournaments() // Refresh the tournament list
+                tournamentRepository.addTournament()
+                fetchTournaments()
             } catch (e: Exception) {
                 _state.value = TournamentsViewState.Error("Failed to add tournament")
             }

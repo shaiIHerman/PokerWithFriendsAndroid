@@ -1,6 +1,7 @@
 package com.shai.pokerwithfriendsandroid.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -38,27 +40,19 @@ fun HomeScreen(viewModel: TournamentsViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
 
     val addNewTournament: () -> Unit = {
-        val newTournament = Tournament(
-            id = "4",
-            name = "New Tournament",
-            gamesPlayed = 0
-        )
-        viewModel.addTournament(newTournament)
+        viewModel.addTournament()
     }
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Tournaments") }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = addNewTournament
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Tournament")
-            }
+    // We want to use LaunchedEffect to fetch tournaments only once when the composable is first created, and not from the viewmodel init because we want it to be in sync with the state controlled by the viewmodel but handled by the composable.
+    LaunchedEffect(key1 = Unit) { viewModel.fetchTournaments() }
+    Scaffold(topBar = {
+        TopAppBar(title = { Text("Tournaments") })
+    }, floatingActionButton = {
+        FloatingActionButton(
+            onClick = addNewTournament
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Add Tournament")
         }
-    ) { paddingValues ->
+    }) { paddingValues ->
         when (state) {
             is TournamentsViewState.Loading -> {
                 LoadingState()
@@ -71,7 +65,9 @@ fun HomeScreen(viewModel: TournamentsViewModel = hiltViewModel()) {
 
             is TournamentsViewState.Error -> {
                 val message = (state as TournamentsViewState.Error).message
-                Text(text = "Error: $message")
+                Column(modifier = Modifier.padding(paddingValues)) {
+                    Text(text = "Error: $message", color = Color.Red)
+                }
             }
         }
     }
@@ -79,7 +75,7 @@ fun HomeScreen(viewModel: TournamentsViewModel = hiltViewModel()) {
 
 @Composable
 fun TournamentList(paddingValues: PaddingValues, tournaments: List<Tournament>) {
-    LazyColumn {
+    LazyColumn(modifier = Modifier.padding(paddingValues)) {
         items(tournaments) { tournament ->
             TournamentItem(tournament)
         }

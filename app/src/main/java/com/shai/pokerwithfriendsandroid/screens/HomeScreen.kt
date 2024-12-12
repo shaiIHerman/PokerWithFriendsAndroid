@@ -36,19 +36,18 @@ import com.shai.pokerwithfriendsandroid.viewmodels.TournamentsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: TournamentsViewModel = hiltViewModel()) {
+fun HomeScreen(viewModel: TournamentsViewModel = hiltViewModel(), onAddTournament: () -> Unit) {
     val state by viewModel.state.collectAsState()
 
-    val addNewTournament: () -> Unit = {
-        viewModel.addTournament()
-    }
-    // We want to use LaunchedEffect to fetch tournaments only once when the composable is first created, and not from the viewmodel init because we want it to be in sync with the state controlled by the viewmodel but handled by the composable.
+    // We want to use LaunchedEffect to fetch tournaments only once when the composable is first created,
+    // and not from the viewmodel init because we want it to be in sync with the state controlled by
+    // the viewmodel but handled by the composable.
     LaunchedEffect(key1 = Unit) { viewModel.fetchTournaments() }
     Scaffold(topBar = {
         TopAppBar(title = { Text("Tournaments") })
     }, floatingActionButton = {
         FloatingActionButton(
-            onClick = addNewTournament
+            onClick = { onAddTournament() }
         ) {
             Icon(Icons.Default.Add, contentDescription = "Add Tournament")
         }

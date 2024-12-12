@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.shai.pokerwithfriendsandroid.screens.CreateTournamentWizard
 import com.shai.pokerwithfriendsandroid.screens.HomeScreen
 import com.shai.pokerwithfriendsandroid.screens.LoginScreen
 import com.shai.pokerwithfriendsandroid.screens.SplashScreen
@@ -45,7 +46,12 @@ fun NavigationHost(
             }
         }
         composable(route = "home_screen") {
-            HomeScreen()
+            HomeScreen(){
+                navController.navigate("create_tournament_screen")
+            }
+        }
+        composable(route = "create_tournament_screen") {
+            CreateTournamentWizard(onTournamentCreated = { }, onClose = {})
         }
     }
 }

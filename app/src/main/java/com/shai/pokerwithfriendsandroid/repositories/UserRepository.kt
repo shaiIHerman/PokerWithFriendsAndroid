@@ -19,7 +19,8 @@ class UserRepository @Inject constructor(
     ): ApiOperation<User?> {
         val authUser = authService.signUpWithEmail(email, password)
         return safeApiCall {
-            val documentReference = fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
+            val documentReference =
+                fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
             fireStoreClient.setUserDocumentData(documentReference, authUser?.email ?: "", name)
             userCache = fireStoreClient.getDocument<User>(documentReference)
             userCache
@@ -33,8 +34,7 @@ class UserRepository @Inject constructor(
         val authUser = authService.loginWithEmail(email, password)
         return safeApiCall {
             userCache = fireStoreClient.getDocument<User>(
-                collectionName = "users",
-                docId = authUser?.uid ?: ""
+                collectionName = "users", docId = authUser?.uid ?: ""
             )
             userCache
         }
@@ -44,22 +44,24 @@ class UserRepository @Inject constructor(
         val authUser = authService.loginWithGoogle(credential)
         return safeApiCall {
             val userExists = fireStoreClient.getDocument<User>(
-                collectionName = "users",
-                docId = authUser?.uid ?: ""
+                collectionName = "users", docId = authUser?.uid ?: ""
             )
             if (userExists != null) {
                 userCache = userExists
                 userCache
             } else {
-                val documentReference = fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
+                val documentReference =
+                    fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
                 fireStoreClient.setUserDocumentData(
-                    documentReference,
-                    authUser?.email ?: "",
-                    authUser?.displayName ?: ""
+                    documentReference, authUser?.email ?: "", authUser?.displayName ?: ""
                 )
                 userCache = fireStoreClient.getDocument<User>(documentReference)
                 userCache
             }
         }
+    }
+
+    fun fetchAllCharactersByName(searchQuery: String): ApiOperation<List<User>> {
+        TODO("Not yet implemented")
     }
 }

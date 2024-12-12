@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -46,7 +47,6 @@ import com.shai.pokerwithfriendsandroid.ui.theme.BorderColor
 import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
 import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
 import com.shai.pokerwithfriendsandroid.utils.PasswordValidator
-
 @Composable
 fun ImageComponent(image: Int) {
     Image(
@@ -94,7 +94,7 @@ fun MyTextField(
         modifier = Modifier
             .fillMaxWidth()
             .onFocusChanged { focusState -> onFocusChanged(focusState.hasFocus) },
-        colors = TextFieldDefaults.outlinedTextFieldColors(
+        colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = if (isValid) BrandColor else Color.Red,
             unfocusedBorderColor = if (isValid) BorderColor else Color.Red,
             focusedLeadingIconColor = if (isValid) BrandColor else Color.Red,
@@ -155,7 +155,7 @@ fun PasswordInputComponent(
                 hasFocus = focusState.hasFocus
                 onFocusChanged(hasFocus)
             },
-        colors = TextFieldDefaults.outlinedTextFieldColors(
+        colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = if (isValid) BrandColor else Color.Red,
             unfocusedBorderColor = if (isValid) BorderColor else Color.Red,
             focusedLeadingIconColor = if (isValid) BrandColor else Color.Red,

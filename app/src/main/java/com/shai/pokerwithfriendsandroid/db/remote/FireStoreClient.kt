@@ -30,6 +30,7 @@ class FireStoreClient {
             .toObject(T::class.java)
     }
 
+    //todo: consider making this a generic function also there's no need for a try catch here, because of the safeApiCall function
     suspend fun setUserDocumentData(
         documentReference: DocumentReference, email: String, name: String
     ) {
@@ -77,7 +78,7 @@ class FireStoreClient {
             val gamesPlayed = document.getLong("gamesPlayed")?.toInt() ?: 0
             val dateCreated =
                 document.getTimestamp("dateCreated")?.toDate()?.time ?: System.currentTimeMillis()
-            val id = document.id  // Firestore document ID
+            val id = document.id
             Log.d("FireStoreClient", "Document ID: $id")
             Tournament(
                 id = id, name = name, gamesPlayed = gamesPlayed, dateCreated = dateCreated

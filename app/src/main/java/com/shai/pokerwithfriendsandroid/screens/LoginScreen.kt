@@ -62,7 +62,7 @@ fun LoginScreen(
         }
     val googleSignInAction = remember {
         {
-            resultLauncher.launch(googleSignInClient?.signInIntent)
+            resultLauncher.launch(googleSignInClient!!.signInIntent)
             viewModel.initiateGoogleSignIn()
         }
     }

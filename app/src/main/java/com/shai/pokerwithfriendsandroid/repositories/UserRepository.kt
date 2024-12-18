@@ -18,13 +18,14 @@ class UserRepository @Inject constructor(
         email: String, password: String, name: String
     ): ApiOperation<User?> {
         val authUser = authService.signUpWithEmail(email, password)
-        return safeApiCall {
-            val documentReference =
-                fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
-            fireStoreClient.setUserDocumentData(documentReference, authUser?.email ?: "", name)
-            userCache = fireStoreClient.getDocument<User>(documentReference)
-            userCache
-        }
+        return safeApiCall { register(authUser?.uid ?: "", name, email) }
+    }
+
+    private suspend fun register(uid: String, name: String, email: String): User? {
+        val documentReference = fireStoreClient.getDocumentReference("users", uid)
+        fireStoreClient.setUserDocumentData(documentReference, email, name)
+        userCache = fireStoreClient.getDocument<User>(documentReference)
+        return userCache
     }
 
     suspend fun loginUser(
@@ -50,18 +51,15 @@ class UserRepository @Inject constructor(
                 userCache = userExists
                 userCache
             } else {
-                val documentReference =
-                    fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
-                fireStoreClient.setUserDocumentData(
-                    documentReference, authUser?.email ?: "", authUser?.displayName ?: ""
-                )
-                userCache = fireStoreClient.getDocument<User>(documentReference)
-                userCache
+                register(authUser?.uid ?: "", authUser?.displayName ?: "", authUser?.email ?: "")
             }
         }
     }
 
-    fun fetchAllCharactersByName(searchQuery: String): ApiOperation<List<User>> {
-        TODO("Not yet implemented")
+    suspend fun fetchUsersByName(searchQuery: String): ApiOperation<List<User>> {
+        return safeApiCall {
+            fireStoreClient.fetchUsersByName(searchQuery)
+        }
     }
+
 }

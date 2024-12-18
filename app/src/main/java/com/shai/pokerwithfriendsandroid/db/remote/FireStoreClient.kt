@@ -40,9 +40,9 @@ class FireStoreClient {
         }
 
         Log.d("FirestoreClient", "Document Reference: ${documentReference.path}")
-
+        val searchableToken = name.lowercase().trim()
         val userData = hashMapOf(
-            "email" to email, "name" to name
+            "email" to email, "name" to name,"searchable_token" to searchableToken
         )
 
         try {
@@ -84,6 +84,15 @@ class FireStoreClient {
                 id = id, name = name, gamesPlayed = gamesPlayed, dateCreated = dateCreated
             )
         }
+    }
+
+    suspend fun fetchUsersByName(searchQuery: String): List<User> {
+        val normalizedQuery = searchQuery.lowercase().trim()
+        return firestore.collection("users").orderBy("searchable_token")
+            .whereGreaterThanOrEqualTo("searchable_token", normalizedQuery)
+            .get().await().map { document ->
+                document.toObject(User::class.java)
+            }
     }
 }
 

@@ -1,19 +1,25 @@
 package com.shai.pokerwithfriendsandroid.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.sharp.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,7 +28,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,6 +53,7 @@ import com.shai.pokerwithfriendsandroid.ui.theme.BorderColor
 import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
 import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
 import com.shai.pokerwithfriendsandroid.utils.PasswordValidator
+
 @Composable
 fun ImageComponent(image: Int) {
     Image(
@@ -65,14 +72,19 @@ fun HeadingTextComponent(heading: String) {
         modifier = Modifier.fillMaxWidth(),
         fontSize = 39.sp,
         color = Tertirary,
-        fontWeight = FontWeight.Bold
+        fontWeight = FontWeight.Bold,
+        lineHeight = 40.sp
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+enum class TextType {
+    Text, Email, Password, Phone, Number
+}
+
 @Composable
 fun MyTextField(
     labelVal: String,
+    textType: TextType = TextType.Text,
     icon: Int? = null,
     vector: ImageVector? = null,
     fieldValue: String,
@@ -80,14 +92,14 @@ fun MyTextField(
     validation: Pair<Boolean, String> = Pair(true, ""),
     onFocusChanged: (Boolean) -> Unit = {}
 ) {
-    val typeOfKeyboard: KeyboardType = when (labelVal) {
-        "email ID" -> KeyboardType.Email
-        "mobile" -> KeyboardType.Phone
+    val typeOfKeyboard: KeyboardType = when (textType) {
+        TextType.Email -> KeyboardType.Email
+        TextType.Phone -> KeyboardType.Phone
+        TextType.Number -> KeyboardType.Number
         else -> KeyboardType.Text
     }
     val (isValid, errorMsg) = validation
-    OutlinedTextField(
-        value = fieldValue,
+    OutlinedTextField(value = fieldValue,
         onValueChange = { newValue: String ->
             onValueChange(newValue)
         },
@@ -129,7 +141,6 @@ fun MyTextField(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PasswordInputComponent(
     placeholder: String,
@@ -144,8 +155,7 @@ fun PasswordInputComponent(
     }
     var hasFocus by remember { mutableStateOf(false) }
     val (isValid, errorMsg) = validation
-    OutlinedTextField(
-        value = fieldValue,
+    OutlinedTextField(value = fieldValue,
         onValueChange = {
             onValueChange(it)
         },
@@ -212,7 +222,55 @@ fun PasswordInputComponent(
     }
 }
 
+@Composable
+fun SearchTextField(
+    searchTextFieldState: TextFieldState,
+    onClearText: () -> Unit,
+    labelVal: String = "Search"
+) {
+    val isFocused = remember { mutableStateOf(false) }
 
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedTextField(
+            state = searchTextFieldState,
+            modifier = Modifier
+                .weight(1f)
+                .onFocusChanged { focusState ->
+                    isFocused.value = focusState.hasFocus
+                },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = BrandColor,
+                unfocusedBorderColor = BorderColor,
+                focusedLeadingIconColor = BrandColor,
+                unfocusedLeadingIconColor = Tertirary,
+            ),
+            shape = MaterialTheme.shapes.small,
+            placeholder = { Text(text = labelVal, color = Tertirary) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Rounded.Search,
+                    contentDescription = "Search icon",
+                )
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text, imeAction = ImeAction.Done
+            ),
+        )
+        AnimatedVisibility(visible = searchTextFieldState.text.isNotBlank()) {
+                Icon(imageVector = Icons.Rounded.Delete,
+                    contentDescription = "Delete icon",
+                    tint = Tertirary,
+                    modifier = Modifier.clickable {
+                        onClearText()
+                    })
+            }
+    }
+}
 
 @Composable
 fun PrimaryButton(labelVal: String, onPrimaryBtnClick: () -> Unit = {}) {

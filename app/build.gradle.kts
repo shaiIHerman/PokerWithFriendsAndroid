@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.shai.pokerwithfriendsandroid"
-    compileSdk = 34
+    compileSdk = 35
     buildFeatures {
         buildConfig = true
     }
@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.material.icons.core)
     implementation(libs.androidx.runtime.livedata)
 
     implementation(libs.bundles.ktor)

@@ -57,12 +57,18 @@ fun EmailField(viewModel: LoginViewModel, isRegister: Boolean) {
     }
 
     MyTextField(
-        labelVal = "E-mail", fieldValue = email, vector = Icons.Filled.Email, onValueChange = {
+        labelVal = "E-mail",
+        textType = TextType.Email,
+        fieldValue = email,
+        vector = Icons.Filled.Email,
+        onValueChange = {
             if (isRegister) {
                 hasInteracted = true
             }
             viewModel.updateEmail(it)
-        }, validation = isValidEmail, onFocusChanged = onEmailFocusChanged
+        },
+        validation = isValidEmail,
+        onFocusChanged = onEmailFocusChanged
     )
 }
 

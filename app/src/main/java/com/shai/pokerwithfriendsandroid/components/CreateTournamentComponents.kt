@@ -46,8 +46,14 @@ import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 
 
 @Composable
-fun PlayerList(players: List<TournamentData.AddPlayer>) {
+fun PlayerList(players: List<TournamentData.AddPlayer>?) {
+    Text("Selected Players:")
+    if (players.isNullOrEmpty()) {
+        PlayerListItem(player = TournamentData.AddPlayer(name = "You"))
+        return
+    }
     LazyColumn {
+        item { PlayerListItem(player = TournamentData.AddPlayer(name = "You")) }
         items(players) { player ->
             PlayerListItem(player = player)
         }
@@ -57,7 +63,7 @@ fun PlayerList(players: List<TournamentData.AddPlayer>) {
 @Composable
 fun PlayerListItem(player: TournamentData.AddPlayer) {
     Column(modifier = Modifier.padding(8.dp)) {
-        Text("Name: ${player.name}")
+        Text(player.name)
     }
 }
 
@@ -93,8 +99,7 @@ fun SearchComponent(
     Column {
         when (val state = screenState) {
             AddPlayersViewModel.ScreenState.Empty -> {}
-            is AddPlayersViewModel.ScreenState.Content -> ShowUsers(
-                users = state.results,
+            is AddPlayersViewModel.ScreenState.Content -> ShowUsers(users = state.results,
                 onAddClick = {
                     addPlayersViewModel.onSearchCompleted()
                     onUserSelected(it)

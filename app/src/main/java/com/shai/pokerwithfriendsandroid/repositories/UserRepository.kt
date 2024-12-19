@@ -1,6 +1,7 @@
 package com.shai.pokerwithfriendsandroid.repositories
 
 import com.google.firebase.auth.AuthCredential
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentReference
 import com.shai.pokerwithfriendsandroid.auth.AuthService
 import com.shai.pokerwithfriendsandroid.db.remote.ApiOperation
@@ -13,7 +14,19 @@ class UserRepository @Inject constructor(
     private val authService: AuthService, private val fireStoreClient: FireStoreClient
 ) {
 
-    private var userCache: User? = null
+    fun getUserRef(): DocumentReference? = UserCache.getUserRef()
+    fun getUser(): User? = UserCache.getUser()
+
+
+    suspend fun updateCurrentUser(firebaseUser: FirebaseUser) : DocumentReference{
+         val userRefCache = fireStoreClient.getDocumentReference(
+            "users",
+            firebaseUser.uid
+        )
+        val userCache = fireStoreClient.getDocument<User>(userRefCache!!)
+        UserCache.updateUserCache(userRefCache, userCache!!)
+        return userRefCache!!
+    }
 
     suspend fun registerNewUser(
         email: String, password: String, name: String
@@ -23,9 +36,10 @@ class UserRepository @Inject constructor(
     }
 
     private suspend fun register(uid: String, name: String, email: String): User? {
-        val documentReference = fireStoreClient.getDocumentReference("users", uid)
-        fireStoreClient.setUserDocumentData(documentReference, email, name)
-        userCache = fireStoreClient.getDocument<User>(documentReference)
+        val userRefCache = fireStoreClient.getDocumentReference("users", uid)
+        fireStoreClient.setUserDocumentData(userRefCache!!, email, name)
+        val userCache = fireStoreClient.getDocument<User>(userRefCache!!)
+        UserCache.updateUserCache(userRefCache, userCache!!)
         return userCache
     }
 
@@ -35,9 +49,11 @@ class UserRepository @Inject constructor(
     ): ApiOperation<User?> {
         val authUser = authService.loginWithEmail(email, password)
         return safeApiCall {
-            userCache = fireStoreClient.getDocument<User>(
+            val userCache = fireStoreClient.getDocument<User>(
                 collectionName = "users", docId = authUser?.uid ?: ""
             )
+            val userRefCache = fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
+            UserCache.updateUserCache(userRefCache, userCache!!)
             userCache
         }
     }
@@ -49,8 +65,10 @@ class UserRepository @Inject constructor(
                 collectionName = "users", docId = authUser?.uid ?: ""
             )
             if (userExists != null) {
-                userCache = userExists
-                userCache
+                val userRefCache =
+                    fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
+                UserCache.updateUserCache(userRefCache, userExists)
+                userExists
             } else {
                 register(authUser?.uid ?: "", authUser?.displayName ?: "", authUser?.email ?: "")
             }
@@ -73,5 +91,22 @@ class UserRepository @Inject constructor(
         return safeApiCall {
             fireStoreClient.fetchUserByEmail(email)
         }
+    }
+}
+object UserCache {
+    private var userCache: User? = null
+    private var userRefCache: DocumentReference? = null
+
+    fun getUserRef(): DocumentReference? = userRefCache
+    fun getUser(): User? = userCache
+
+    fun updateUserCache(userRef: DocumentReference, user: User) {
+        userRefCache = userRef
+        userCache = user
+    }
+
+    fun clearCache() {
+        userRefCache = null
+        userCache = null
     }
 }

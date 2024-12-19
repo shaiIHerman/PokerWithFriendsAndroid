@@ -46,10 +46,13 @@ class TournamentRepository @Inject constructor(
     }
 
     suspend fun addTournament(tournamentData: TournamentData): ApiOperation<DocumentReference?> {
+        val players = tournamentData.players?.map { it.documentReference }
+        val updatedPlayers = players?.plus(tournamentData.admin)
         val tournament = hashMapOf(
             "name" to tournamentData.name,
             "buyIn" to tournamentData.buyIn,
-            "players" to tournamentData.players?.map { it.documentReference },
+            "players" to updatedPlayers,
+            "admin" to tournamentData.admin,
             "dateCreated" to FieldValue.serverTimestamp()
         )
         return safeApiCall {

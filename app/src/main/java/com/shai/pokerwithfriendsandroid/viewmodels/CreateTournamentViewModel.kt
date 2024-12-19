@@ -61,23 +61,31 @@ class CreateTournamentViewModel @Inject constructor(
         }
     }
 
+    fun getCurrentUserRef(): DocumentReference? {
+        return userRepository.getUserRef()
+    }
+
     fun createTournament() = viewModelScope.launch {
         _createTournamentUiState.value = CreateTournamentViewState.Adding
+        val userRef = getCurrentUserRef() ?: run {
+            Log.e("CreateTournamentViewModel", "User reference is not available")
+            return@launch
+        }
         val updatedPlayers = _tournament.value?.players?.map { player ->
             if (player.documentReference == null) {
                 userRepository.getUserByEmail(player.email).onSuccess {
-                        player.documentReference = it
-                    }.onFailure {
-                        Log.e(
-                            "CreateTournamentViewModel",
-                            "Error fetching user by email: ${it.message}"
-                        )
-                    }
+                    player.documentReference = it
+                }.onFailure {
+                    Log.e(
+                        "CreateTournamentViewModel", "Error fetching user by email: ${it.message}"
+                    )
+                }
             }
             player
         }
         val filteredPlayers = updatedPlayers?.filter { it.documentReference != null }
         _tournament.value = _tournament.value?.copy(players = filteredPlayers)
+        _tournament.value = _tournament.value?.copy(admin = userRef)
 
         tournamentRepository.addTournament(_tournament.value!!).onSuccess {
             _createTournamentUiState.value = CreateTournamentViewState.TournamentAdded
@@ -89,7 +97,10 @@ class CreateTournamentViewModel @Inject constructor(
 }
 
 data class TournamentData(
-    val name: String = "", val buyIn: String = "", val players: List<AddPlayer>? = emptyList()
+    val name: String = "",
+    val buyIn: String = "",
+    val players: List<AddPlayer>? = emptyList(),
+    val admin: DocumentReference? = null
 ) {
     class AddPlayer(
         val name: String, val email: String = "", var documentReference: DocumentReference? = null

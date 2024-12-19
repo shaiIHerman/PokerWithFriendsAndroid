@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -79,11 +78,7 @@ fun TournamentDetailsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
         SecondaryButton("Add Players") { onNext() }
-        if (viewModel.tournament.value?.players?.isNotEmpty() == true) {
-            PlayerList(players = viewModel.tournament.value!!.players!!)
-        } else {
-            Text("No players added yet.")
-        }
+        PlayerList(players = viewModel.tournament.value?.players)
         Spacer(modifier = Modifier.weight(1f))
         PrimaryButton(
             "Create",

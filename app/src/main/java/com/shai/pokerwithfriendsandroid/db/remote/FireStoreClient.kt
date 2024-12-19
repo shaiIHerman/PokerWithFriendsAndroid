@@ -42,7 +42,10 @@ class FireStoreClient {
         Log.d("FirestoreClient", "Document Reference: ${documentReference.path}")
         val searchableToken = name.lowercase().trim()
         val userData = hashMapOf(
-            "email" to email, "name" to name,"searchable_token" to searchableToken
+            "email" to email,
+            "name" to name,
+            "searchable_token" to searchableToken,
+            "isAuthenticated" to true
         )
 
         try {
@@ -52,7 +55,32 @@ class FireStoreClient {
         }
     }
 
-    suspend fun createDocument(collectionName: String, data: Any): DocumentReference {
+    //todo: consider making this a generic function also there's no need for a try catch here, because of the safeApiCall function
+    suspend fun addUserDocumentData(
+        name: String, email: String
+    ): DocumentReference? {
+
+        if (name.isEmpty()) {
+            throw IllegalArgumentException("Name cannot be null or empty.")
+        }
+
+        val searchableToken = name.lowercase().trim()
+        val userData = hashMapOf(
+            "email" to email,
+            "name" to name,
+            "searchable_token" to searchableToken,
+            "isAuthenticated" to false
+        )
+
+        try {
+            return firestore.collection("users").add(userData).await()
+        } catch (e: Exception) {
+            Log.e("FirestoreClient", "Error setting user data: ${e.message}", e)
+            return null
+        }
+    }
+
+    suspend fun createDocument(collectionName: String, data: Any): DocumentReference? {
         return firestore.collection(collectionName).add(data).await()
     }
 
@@ -89,10 +117,17 @@ class FireStoreClient {
     suspend fun fetchUsersByName(searchQuery: String): List<User> {
         val normalizedQuery = searchQuery.lowercase().trim()
         return firestore.collection("users").orderBy("searchable_token")
-            .whereGreaterThanOrEqualTo("searchable_token", normalizedQuery)
-            .get().await().map { document ->
+            .startAt(normalizedQuery)
+            .endAt("$normalizedQuery\uf8ff")
+            .get().await()
+            .map { document ->
                 document.toObject(User::class.java)
             }
+    }
+
+    suspend fun fetchUserByEmail(email: String): DocumentReference {
+        return firestore.collection("users").whereEqualTo("email", email).get()
+            .await().documents[0].reference
     }
 }
 

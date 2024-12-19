@@ -46,12 +46,12 @@ fun NavigationHost(
             }
         }
         composable(route = "home_screen") {
-            HomeScreen(){
+            HomeScreen {
                 navController.navigate("create_tournament_screen")
             }
         }
         composable(route = "create_tournament_screen") {
-            CreateTournamentWizard(onTournamentCreated = { }, onClose = {})
+            CreateTournamentWizard(onClose = { navController.popBackStack("home_screen", false) })
         }
     }
 }

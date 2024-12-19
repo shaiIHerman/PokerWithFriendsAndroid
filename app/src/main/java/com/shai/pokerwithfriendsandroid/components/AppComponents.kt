@@ -3,7 +3,6 @@ package com.shai.pokerwithfriendsandroid.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,15 +10,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.sharp.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,7 +44,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -223,16 +223,56 @@ fun PasswordInputComponent(
 }
 
 @Composable
+fun EmailField(
+    email: String,
+    isValidEmail: Pair<Boolean, String>,
+    isRegister: Boolean = false,
+    validateEmail: () -> Unit = {},
+    updateEmail: (String) -> Unit = {}
+) {
+    var hasInteracted by remember { mutableStateOf(false) }
+
+    val onEmailFocusChanged: (Boolean) -> Unit = { hasFocus ->
+        if (!hasFocus && hasInteracted) {
+            validateEmail()
+        }
+    }
+
+    MyTextField(
+        labelVal = "E-mail",
+        textType = TextType.Email,
+        fieldValue = email,
+        vector = Icons.Filled.Email,
+        onValueChange = {
+            if (isRegister) {
+                hasInteracted = true
+            }
+            updateEmail(it)
+        },
+        validation = isValidEmail,
+        onFocusChanged = onEmailFocusChanged
+    )
+}
+
+@Composable
+fun NameField(name: String, isValidName: Pair<Boolean, String>, onValueChange: (String) -> Unit) {
+    MyTextField(
+        labelVal = "Name",
+        vector = Icons.Filled.Face,
+        fieldValue = name,
+        validation = isValidName,
+        onValueChange = onValueChange
+    )
+}
+
+@Composable
 fun SearchTextField(
-    searchTextFieldState: TextFieldState,
-    onClearText: () -> Unit,
-    labelVal: String = "Search"
+    searchTextFieldState: TextFieldState, onClearText: () -> Unit, labelVal: String = "Search"
 ) {
     val isFocused = remember { mutableStateOf(false) }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -262,18 +302,23 @@ fun SearchTextField(
             ),
         )
         AnimatedVisibility(visible = searchTextFieldState.text.isNotBlank()) {
-                Icon(imageVector = Icons.Rounded.Delete,
-                    contentDescription = "Delete icon",
-                    tint = Tertirary,
-                    modifier = Modifier.clickable {
-                        onClearText()
-                    })
-            }
+            Icon(imageVector = Icons.Rounded.Delete,
+                contentDescription = "Delete icon",
+                tint = Tertirary,
+                modifier = Modifier.clickable {
+                    onClearText()
+                })
+        }
     }
 }
 
 @Composable
-fun PrimaryButton(labelVal: String, onPrimaryBtnClick: () -> Unit = {}) {
+fun PrimaryButton(
+    labelVal: String,
+    showProgress: Boolean = false,
+    progressText: String = "",
+    onPrimaryBtnClick: () -> Unit = {}
+) {
     Button(
         onClick = { onPrimaryBtnClick() }, colors = ButtonDefaults.buttonColors(
             containerColor = BrandColor
@@ -281,25 +326,67 @@ fun PrimaryButton(labelVal: String, onPrimaryBtnClick: () -> Unit = {}) {
             .fillMaxWidth()
             .padding(top = 40.dp)
     ) {
-        Text(text = labelVal, color = Color.White, fontSize = 18.sp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (showProgress) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .padding(end = 8.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+            }
+            Text(
+                text = if (!showProgress) labelVal else progressText,
+                color = Color.White,
+                fontSize = 18.sp
+            )
+        }
     }
 }
 
 @Composable
-fun SecondaryButton(labelVal: String) {
+fun SecondaryButton(
+    labelVal: String,
+    showProgress: Boolean = false,
+    progressText: String = "",
+    onSecondaryBtnClick: () -> Unit = {}
+) {
     OutlinedButton(
-        onClick = { /*TODO*/ },
+        onClick = { onSecondaryBtnClick() },
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color.White,
+            containerColor = Color.White
         ),
         border = BorderStroke(2.dp, BrandColor),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 40.dp),
+            .padding(top = 20.dp),
     ) {
-        Text(text = labelVal, color = BrandColor, fontSize = 18.sp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (showProgress) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .padding(end = 8.dp),
+                    color = BrandColor,
+                    strokeWidth = 2.dp
+                )
+            }
+            Text(
+                text = if (!showProgress) labelVal else progressText,
+                color = BrandColor,
+                fontSize = 18.sp
+            )
+        }
     }
 }
+
 
 @Composable
 fun DividerWithText() {
@@ -331,6 +418,6 @@ fun DividerWithText() {
 fun PreviewPrimaryButton() {
     Column {
         PrimaryButton("Continue")
-        SecondaryButton("Secondary Button")
+        SecondaryButton("Secondary Button", showProgress = false)
     }
 }

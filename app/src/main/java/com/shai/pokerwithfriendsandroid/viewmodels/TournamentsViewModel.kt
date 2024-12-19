@@ -30,15 +30,4 @@ class TournamentsViewModel @Inject constructor(
             }
         }
     }
-
-    fun addTournament() {
-        viewModelScope.launch {
-            try {
-                tournamentRepository.addTournament()
-                fetchTournaments()
-            } catch (e: Exception) {
-                _state.value = TournamentsViewState.Error("Failed to add tournament")
-            }
-        }
-    }
 }

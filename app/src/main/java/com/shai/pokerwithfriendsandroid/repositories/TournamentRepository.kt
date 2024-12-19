@@ -1,11 +1,15 @@
 package com.shai.pokerwithfriendsandroid.repositories
 
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
 import com.shai.pokerwithfriendsandroid.db.local.daos.SyncInfoDao
 import com.shai.pokerwithfriendsandroid.db.local.daos.TournamentDao
 import com.shai.pokerwithfriendsandroid.db.local.models.SyncInfo
 import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
+import com.shai.pokerwithfriendsandroid.db.remote.ApiOperation
 import com.shai.pokerwithfriendsandroid.db.remote.FireStoreClient
+import com.shai.pokerwithfriendsandroid.db.remote.safeApiCall
+import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 import javax.inject.Inject
 
 class TournamentRepository @Inject constructor(
@@ -41,12 +45,17 @@ class TournamentRepository @Inject constructor(
         return allTournaments
     }
 
-    suspend fun addTournament() {
+    suspend fun addTournament(tournamentData: TournamentData): ApiOperation<DocumentReference?> {
         val tournament = hashMapOf(
-            "name" to "New TournamentXXX",
-            "gamesPlayed" to 0,
+            "name" to tournamentData.name,
+            "buyIn" to tournamentData.buyIn,
+            "players" to tournamentData.players?.map { it.documentReference },
             "dateCreated" to FieldValue.serverTimestamp()
         )
-        fireStoreClient.createDocument(collectionName = "tournaments", data = tournament)
+        return safeApiCall {
+            fireStoreClient.createDocument(
+                collectionName = "tournaments", data = tournament
+            )
+        }
     }
 }

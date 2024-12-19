@@ -23,7 +23,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authService: AuthService, private val userRepository: UserRepository
+    authService: AuthService, private val userRepository: UserRepository
 ) : ViewModel() {
 
     private var _screenMode = MutableStateFlow<LoginScreenState>(LoginScreenState.Login)

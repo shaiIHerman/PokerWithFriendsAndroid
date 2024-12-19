@@ -12,9 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.ClickableText
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -45,44 +42,17 @@ import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
 import com.shai.pokerwithfriendsandroid.viewmodels.LoginViewModel
 
 @Composable
-fun EmailField(viewModel: LoginViewModel, isRegister: Boolean) {
+fun LoginEmailField(viewModel: LoginViewModel, isRegister: Boolean) {
     val email by viewModel.email.observeAsState("")
     val isValidEmail by viewModel.isEmailValid.observeAsState(Pair(true, ""))
-    var hasInteracted by remember { mutableStateOf(false) }
-
-    val onEmailFocusChanged: (Boolean) -> Unit = { hasFocus ->
-        if (!hasFocus && hasInteracted) {
-            viewModel.validateEmail()
-        }
-    }
-
-    MyTextField(
-        labelVal = "E-mail",
-        textType = TextType.Email,
-        fieldValue = email,
-        vector = Icons.Filled.Email,
-        onValueChange = {
-            if (isRegister) {
-                hasInteracted = true
-            }
-            viewModel.updateEmail(it)
-        },
-        validation = isValidEmail,
-        onFocusChanged = onEmailFocusChanged
-    )
+    EmailField(email, isValidEmail, isRegister, viewModel::validateEmail, viewModel::updateEmail)
 }
 
 @Composable
-fun NameField(viewModel: LoginViewModel) {
+fun LoginNameField(viewModel: LoginViewModel) {
     val name by viewModel.name.observeAsState("")
     val isValidName by viewModel.isNameValid.observeAsState(Pair(true, ""))
-    MyTextField(
-        labelVal = "Name",
-        vector = Icons.Filled.Face,
-        fieldValue = name,
-        validation = isValidName,
-        onValueChange = viewModel::updateName
-    )
+    NameField(name, isValidName, viewModel::updateName)
 }
 
 @Composable

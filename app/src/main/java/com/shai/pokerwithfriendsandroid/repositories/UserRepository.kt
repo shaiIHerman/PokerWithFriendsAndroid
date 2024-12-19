@@ -1,6 +1,7 @@
 package com.shai.pokerwithfriendsandroid.repositories
 
 import com.google.firebase.auth.AuthCredential
+import com.google.firebase.firestore.DocumentReference
 import com.shai.pokerwithfriendsandroid.auth.AuthService
 import com.shai.pokerwithfriendsandroid.db.remote.ApiOperation
 import com.shai.pokerwithfriendsandroid.db.remote.FireStoreClient
@@ -62,4 +63,15 @@ class UserRepository @Inject constructor(
         }
     }
 
+    suspend fun createPlayer(name: String, email: String): ApiOperation<DocumentReference?> {
+        return safeApiCall {
+            fireStoreClient.addUserDocumentData(name, email)
+        }
+    }
+
+    suspend fun getUserByEmail(email: String): ApiOperation<DocumentReference> {
+        return safeApiCall {
+            fireStoreClient.fetchUserByEmail(email)
+        }
+    }
 }

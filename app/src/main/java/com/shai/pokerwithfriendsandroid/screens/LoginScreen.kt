@@ -25,11 +25,11 @@ import com.google.android.gms.common.api.ApiException
 import com.shai.pokerwithfriendsandroid.components.BottomComponent
 import com.shai.pokerwithfriendsandroid.components.BottomLoginTextComponent
 import com.shai.pokerwithfriendsandroid.components.ConfirmPasswordField
-import com.shai.pokerwithfriendsandroid.components.EmailField
 import com.shai.pokerwithfriendsandroid.components.ForgotPasswordLink
 import com.shai.pokerwithfriendsandroid.components.HeadingText
 import com.shai.pokerwithfriendsandroid.components.LoadingState
-import com.shai.pokerwithfriendsandroid.components.NameField
+import com.shai.pokerwithfriendsandroid.components.LoginEmailField
+import com.shai.pokerwithfriendsandroid.components.LoginNameField
 import com.shai.pokerwithfriendsandroid.components.PasswordField
 import com.shai.pokerwithfriendsandroid.components.WelcomeText
 import com.shai.pokerwithfriendsandroid.screens.states.AuthState
@@ -146,7 +146,7 @@ fun RegisterView(
     Column {
         AuthTopPart(state = LoginScreenState.Register, viewModel)
         Spacer(modifier = Modifier.height(16.dp))
-        NameField(viewModel)
+        LoginNameField(viewModel)
         Spacer(modifier = Modifier.height(16.dp))
         PasswordField(viewModel, true)
         Spacer(modifier = Modifier.height(16.dp))
@@ -166,5 +166,5 @@ fun RegisterView(
 fun AuthTopPart(state: LoginScreenState, viewModel: LoginViewModel) {
     HeadingText(state)
     Spacer(modifier = Modifier.height(16.dp))
-    EmailField(viewModel, isRegister = state == LoginScreenState.Register)
+    LoginEmailField(viewModel, isRegister = state == LoginScreenState.Register)
 }

@@ -1,6 +1,7 @@
 package com.shai.pokerwithfriendsandroid.viewmodels
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.delete
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -70,5 +71,10 @@ class AddPlayersViewModel @Inject constructor(private val userRepository: UserRe
                 )
             }
         }.onFailure { _uiState.update { ScreenState.Error("No search results found") } }
+    }
+
+    fun onSearchCompleted() {
+        _uiState.update { ScreenState.Empty }
+        searchTextFieldState.edit { delete(0, length) }
     }
 }

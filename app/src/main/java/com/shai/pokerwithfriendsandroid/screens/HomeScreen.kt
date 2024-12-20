@@ -2,6 +2,7 @@ package com.shai.pokerwithfriendsandroid.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,15 +15,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.shai.pokerwithfriendsandroid.components.AppTopBar
 import com.shai.pokerwithfriendsandroid.components.LoadingState
 import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
 import com.shai.pokerwithfriendsandroid.screens.states.TournamentsViewState
@@ -40,9 +38,12 @@ import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
 import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentsViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: TournamentsViewModel = hiltViewModel(), onAddTournament: () -> Unit) {
+fun HomeScreen(
+    viewModel: TournamentsViewModel = hiltViewModel(),
+    onAddTournament: () -> Unit,
+    onTournamentClick: (String) -> Unit
+) {
     val state by viewModel.state.collectAsState()
 
     // We want to use LaunchedEffect to fetch tournaments only once when the composable is first created,
@@ -50,13 +51,7 @@ fun HomeScreen(viewModel: TournamentsViewModel = hiltViewModel(), onAddTournamen
     // the viewmodel but handled by the composable.
     LaunchedEffect(key1 = Unit) { viewModel.fetchTournaments() }
     Scaffold(topBar = {
-        Column {
-            TopAppBar(
-                title = { Text("Tournaments") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-            )
-            HorizontalDivider(color = Color.White)
-        }
+        AppTopBar(title = "Tournaments")
     }, floatingActionButton = {
         FloatingActionButton(
             onClick = { onAddTournament() },
@@ -74,7 +69,7 @@ fun HomeScreen(viewModel: TournamentsViewModel = hiltViewModel(), onAddTournamen
 
             is TournamentsViewState.Success -> {
                 val tournaments = (state as TournamentsViewState.Success).tournaments
-                TournamentList(paddingValues, tournaments)
+                TournamentList(paddingValues, tournaments) { onTournamentClick(it) }
             }
 
             is TournamentsViewState.Error -> {
@@ -88,23 +83,26 @@ fun HomeScreen(viewModel: TournamentsViewModel = hiltViewModel(), onAddTournamen
 }
 
 @Composable
-fun TournamentList(paddingValues: PaddingValues, tournaments: List<Tournament>) {
+fun TournamentList(
+    paddingValues: PaddingValues, tournaments: List<Tournament>, onItemClick: (String) -> Unit
+) {
     LazyColumn(modifier = Modifier.padding(paddingValues)) {
         items(tournaments) { tournament ->
-            TournamentItem(tournament)
+            TournamentItem(tournament) { onItemClick(it) }
         }
     }
 }
 
 @Composable
-fun TournamentItem(tournament: Tournament) {
+fun TournamentItem(tournament: Tournament, onItemClick: (String) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
             .background(color = Color.Transparent, shape = RoundedCornerShape(8.dp))
             .border(1.dp, color = BorderColor, shape = RoundedCornerShape(8.dp))
-            .padding(16.dp),
+            .padding(16.dp)
+            .clickable { onItemClick(tournament.id) },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(

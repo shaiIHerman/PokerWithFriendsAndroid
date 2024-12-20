@@ -1,93 +1,48 @@
 package com.shai.pokerwithfriendsandroid.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.shai.pokerwithfriendsandroid.components.AppSpacer
-import com.shai.pokerwithfriendsandroid.components.HeadingTextComponent
-import com.shai.pokerwithfriendsandroid.components.MyTextField
-import com.shai.pokerwithfriendsandroid.components.PlayerList
+import com.shai.pokerwithfriendsandroid.components.AppTopBar
 import com.shai.pokerwithfriendsandroid.components.PrimaryButton
-import com.shai.pokerwithfriendsandroid.components.SecondaryButton
-import com.shai.pokerwithfriendsandroid.components.TextType
-import com.shai.pokerwithfriendsandroid.screens.states.CreateTournamentViewState
-import com.shai.pokerwithfriendsandroid.viewmodels.CreateTournamentViewModel
-import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
-
+import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
+import com.shai.pokerwithfriendsandroid.viewmodels.TournamentDetailsViewModel
 
 @Composable
-fun TournamentDetailsScreen(
-    viewModel: CreateTournamentViewModel = hiltViewModel(), onNext: () -> Unit, onDone: () -> Unit
-) {
-    val createTournamentViewState by viewModel.createTournamentUiState.observeAsState(
-        CreateTournamentViewState.Idle
-    )
-    val context = LocalContext.current
-    val tournament = viewModel.tournament.observeAsState(TournamentData())
+fun TournamentDetailsScreen(viewModel: TournamentDetailsViewModel) {
 
-    LaunchedEffect(createTournamentViewState) {
-        when (createTournamentViewState) {
-            is CreateTournamentViewState.TournamentAdded -> {
-                Toast.makeText(context, "Tournament added successfully!", Toast.LENGTH_SHORT).show()
-                onDone()
-            }
+    // We want to use LaunchedEffect to fetch tournaments only once when the composable is first created,
+    // and not from the viewmodel init because we want it to be in sync with the state controlled by
+    // the viewmodel but handled by the composable.
+//    LaunchedEffect(key1 = Unit) { viewModel.fetchGames() }
+    Scaffold(
+        topBar = { AppTopBar(title = "Tournament Details") }, containerColor = Color.Transparent
+    ) { paddingValues ->
 
-            is CreateTournamentViewState.Error -> {
-                Toast.makeText(
-                    context,
-                    (createTournamentViewState as CreateTournamentViewState.Error).message,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+        val tournament by viewModel.tournament.observeAsState()
+        Column(modifier = Modifier.padding(paddingValues)) {
+            tournament?.let {
+                TournamentDetailsContent(it)
 
-            else -> {}
+            } ?: Text("Loading tournament...")
         }
     }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        HeadingTextComponent("Create New Tournament")
+}
 
-        AppSpacer()
-        MyTextField(labelVal = "Tournament Name",
-            vector = Icons.Filled.Create,
-            fieldValue = tournament.value.name,
-            onValueChange = { viewModel.updateTournamentName(it) })
-
-        AppSpacer()
-        MyTextField(labelVal = "Buy-In Amount",
-            vector = Icons.Filled.ShoppingCart,
-            fieldValue = tournament.value.buyIn,
-            textType = TextType.Number,
-            onValueChange = { viewModel.updateTournamentBuyIn(it) })
-
-        AppSpacer()
-        SecondaryButton("Add Players") { onNext() }
-        PlayerList(players = viewModel.tournament.value?.players) {
-            viewModel.removePlayer(it)
-        }
+@Composable
+fun TournamentDetailsContent(tournament: Tournament) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Tournament Name: ${tournament.name}")
+        Text("Buy-In: ${tournament.buyIn}")
         Spacer(modifier = Modifier.weight(1f))
-        PrimaryButton(
-            "Create",
-            showProgress = createTournamentViewState is CreateTournamentViewState.Adding,
-            progressText = "Creating..."
-        ) {
-            viewModel.createTournament()
-        }
+        PrimaryButton("Start New Game")
     }
 }

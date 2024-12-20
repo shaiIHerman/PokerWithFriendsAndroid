@@ -1,5 +1,6 @@
 package com.shai.pokerwithfriendsandroid.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
@@ -26,6 +27,7 @@ class TournamentsViewModel @Inject constructor(
                 val tournaments = tournamentRepository.getTournaments()
                 _state.value = TournamentsViewState.Success(tournaments)
             } catch (e: Exception) {
+                Log.e("TournamentsViewModel", "Error fetching tournaments", e)
                 _state.value = TournamentsViewState.Error("Failed to load tournaments")
             }
         }

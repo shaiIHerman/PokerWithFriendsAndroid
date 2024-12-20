@@ -61,4 +61,10 @@ class TournamentRepository @Inject constructor(
             )
         }
     }
+
+    suspend fun getTournamentById(tournamentId: String): ApiOperation<Tournament> {
+        return safeApiCall {
+            tournamentDao.getTournamentById(tournamentId)
+        }
+    }
 }

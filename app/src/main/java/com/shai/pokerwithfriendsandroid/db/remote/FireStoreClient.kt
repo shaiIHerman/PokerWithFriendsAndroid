@@ -103,24 +103,26 @@ class FireStoreClient {
 
         return query.documents.map { document ->
             val name = document.getString("name") ?: ""
+            val buyIn = document.getString("buyIn") ?: ""
             val gamesPlayed = document.getLong("gamesPlayed")?.toInt() ?: 0
             val dateCreated =
                 document.getTimestamp("dateCreated")?.toDate()?.time ?: System.currentTimeMillis()
             val id = document.id
             Log.d("FireStoreClient", "Document ID: $id")
             Tournament(
-                id = id, name = name, gamesPlayed = gamesPlayed, dateCreated = dateCreated
+                id = id,
+                name = name,
+                gamesPlayed = gamesPlayed,
+                dateCreated = dateCreated,
+                buyIn = buyIn
             )
         }
     }
 
     suspend fun fetchUsersByName(searchQuery: String): List<User> {
         val normalizedQuery = searchQuery.lowercase().trim()
-        return firestore.collection("users").orderBy("searchable_token")
-            .startAt(normalizedQuery)
-            .endAt("$normalizedQuery\uf8ff")
-            .get().await()
-            .map { document ->
+        return firestore.collection("users").orderBy("searchable_token").startAt(normalizedQuery)
+            .endAt("$normalizedQuery\uf8ff").get().await().map { document ->
                 document.toObject(User::class.java)
             }
     }

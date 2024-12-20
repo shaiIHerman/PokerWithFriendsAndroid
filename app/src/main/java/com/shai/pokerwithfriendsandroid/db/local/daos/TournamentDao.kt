@@ -13,4 +13,7 @@ interface TournamentDao {
 
     @Query("SELECT * FROM tournaments")
     suspend fun getTournaments(): List<Tournament>
+
+    @Query("SELECT * FROM tournaments WHERE id = :tournamentId LIMIT 1")
+    suspend fun getTournamentById(tournamentId: String): Tournament
 }

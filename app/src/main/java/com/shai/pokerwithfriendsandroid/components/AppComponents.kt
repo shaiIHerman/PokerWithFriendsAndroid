@@ -23,6 +23,7 @@ import androidx.compose.material.icons.sharp.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +32,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -416,6 +419,18 @@ fun DividerWithText() {
 @Composable
 fun AppSpacer(){
     Spacer(modifier = Modifier.height(16.dp))
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AppTopBar(title: String) {
+    Column {
+        TopAppBar(
+            title = { Text(title) },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+        )
+        HorizontalDivider(color = Color.White)
+    }
 }
 
 /** Previews */

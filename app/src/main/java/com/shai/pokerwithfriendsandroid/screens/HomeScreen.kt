@@ -1,6 +1,7 @@
 package com.shai.pokerwithfriendsandroid.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,11 +16,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +35,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.shai.pokerwithfriendsandroid.components.LoadingState
 import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
 import com.shai.pokerwithfriendsandroid.screens.states.TournamentsViewState
+import com.shai.pokerwithfriendsandroid.ui.theme.BorderColor
+import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
+import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,14 +50,23 @@ fun HomeScreen(viewModel: TournamentsViewModel = hiltViewModel(), onAddTournamen
     // the viewmodel but handled by the composable.
     LaunchedEffect(key1 = Unit) { viewModel.fetchTournaments() }
     Scaffold(topBar = {
-        TopAppBar(title = { Text("Tournaments") })
+        Column {
+            TopAppBar(
+                title = { Text("Tournaments") },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+            )
+            HorizontalDivider(color = Color.White)
+        }
     }, floatingActionButton = {
         FloatingActionButton(
-            onClick = { onAddTournament() }
+            onClick = { onAddTournament() },
+            containerColor = BrandColor,
+            contentColor = Color.White
         ) {
             Icon(Icons.Default.Add, contentDescription = "Add Tournament")
         }
-    }) { paddingValues ->
+    }, containerColor = Color.Transparent
+    ) { paddingValues ->
         when (state) {
             is TournamentsViewState.Loading -> {
                 LoadingState()
@@ -87,7 +102,8 @@ fun TournamentItem(tournament: Tournament) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .background(Color.Cyan, shape = RoundedCornerShape(8.dp))
+            .background(color = Color.Transparent, shape = RoundedCornerShape(8.dp))
+            .border(1.dp, color = BorderColor, shape = RoundedCornerShape(8.dp))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -100,7 +116,7 @@ fun TournamentItem(tournament: Tournament) {
         Text(
             text = "${tournament.gamesPlayed} games played",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.DarkGray.copy(alpha = 0.6f)
+            color = Tertirary
         )
     }
 }

@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,29 +42,52 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shai.pokerwithfriendsandroid.db.remote.models.User
 import com.shai.pokerwithfriendsandroid.screens.states.CreatePlayerViewState
 import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
+import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
 import com.shai.pokerwithfriendsandroid.viewmodels.AddPlayersViewModel
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 
 
 @Composable
-fun PlayerList(players: List<TournamentData.AddPlayer>?) {
+fun PlayerList(
+    players: List<TournamentData.AddPlayer>?,
+    onRemovePlayer: (TournamentData.AddPlayer) -> Unit
+) {
+    AppSpacer()
     Text("Selected Players:")
     if (players.isNullOrEmpty()) {
-        PlayerListItem(player = TournamentData.AddPlayer(name = "You"))
+        PlayerListItem(
+            player = TournamentData.AddPlayer(name = "You"),
+            isYou = true,
+            onRemovePlayer = {})
         return
     }
     LazyColumn {
-        item { PlayerListItem(player = TournamentData.AddPlayer(name = "You")) }
+        item {
+            PlayerListItem(
+                player = TournamentData.AddPlayer(name = "You"),
+                isYou = true,
+                onRemovePlayer = {})
+        }
         items(players) { player ->
-            PlayerListItem(player = player)
+            PlayerListItem(player = player, isYou = false, onRemovePlayer = onRemovePlayer)
         }
     }
 }
 
 @Composable
-fun PlayerListItem(player: TournamentData.AddPlayer) {
-    Column(modifier = Modifier.padding(8.dp)) {
+fun PlayerListItem(
+    player: TournamentData.AddPlayer,
+    isYou: Boolean,
+    onRemovePlayer: (TournamentData.AddPlayer) -> Unit
+) {
+    Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(player.name)
+        Spacer(modifier = Modifier.weight(1f))
+        if (!isYou) {
+            IconButton(onClick = { onRemovePlayer(player) }) {
+                Icon(Icons.Default.Delete, contentDescription = "Remove", tint = Tertirary)
+            }
+        }
     }
 }
 
@@ -99,11 +123,18 @@ fun SearchComponent(
     Column {
         when (val state = screenState) {
             AddPlayersViewModel.ScreenState.Empty -> {}
-            is AddPlayersViewModel.ScreenState.Content -> ShowUsers(users = state.results,
-                onAddClick = {
-                    addPlayersViewModel.onSearchCompleted()
-                    onUserSelected(it)
-                })
+            is AddPlayersViewModel.ScreenState.Content -> {
+                if (state.results.isNotEmpty()) {
+                    ShowUsers(users = state.results, onAddClick = {
+                        addPlayersViewModel.onSearchCompleted()
+                        onUserSelected(it)
+                    })
+                }
+                else{
+                    AppSpacer()
+                    Text("No players found", color = Color.Gray)
+                }
+            }
 
             is AddPlayersViewModel.ScreenState.Error -> {
                 Log.e("SearchViewModel", "Error: ${state.message}")
@@ -116,7 +147,7 @@ fun SearchComponent(
 
 @Composable
 fun ShowUsers(users: List<User>, onAddClick: (TournamentData.AddPlayer) -> Unit = {}) {
-    Spacer(modifier = Modifier.height(16.dp))
+    AppSpacer()
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -151,8 +182,7 @@ fun ShowUsers(users: List<User>, onAddClick: (TournamentData.AddPlayer) -> Unit 
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-
+                    AppSpacer()
                     if (index < users.size - 1) {
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 16.dp),
@@ -185,7 +215,7 @@ fun CreateUser(
         }
     }
     NameField(name, Pair(true, "")) { name = it }
-    Spacer(modifier = Modifier.height(16.dp))
+    AppSpacer()
     EmailField(email = email, isValidEmail = Pair(true, ""), updateEmail = { email = it })
     //todo: validate email and name
     SecondaryButton(

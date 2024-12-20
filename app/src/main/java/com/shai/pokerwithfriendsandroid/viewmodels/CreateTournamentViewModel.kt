@@ -49,6 +49,9 @@ class CreateTournamentViewModel @Inject constructor(
             _createPlayerUiState.value = CreatePlayerViewState.Idle
         }
     }
+    fun removePlayer(player: TournamentData.AddPlayer) {
+        _tournament.value = _tournament.value?.copy(players = _tournament.value?.players?.minus(player))
+    }
 
     fun createPlayer(newUser: TournamentData.AddPlayer) = viewModelScope.launch {
         _createPlayerUiState.value = CreatePlayerViewState.Adding

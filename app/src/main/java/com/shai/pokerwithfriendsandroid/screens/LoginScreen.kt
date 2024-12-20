@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
+import com.shai.pokerwithfriendsandroid.components.AppSpacer
 import com.shai.pokerwithfriendsandroid.components.BottomComponent
 import com.shai.pokerwithfriendsandroid.components.BottomLoginTextComponent
 import com.shai.pokerwithfriendsandroid.components.ConfirmPasswordField
@@ -124,7 +125,7 @@ fun LoginView(
 ) {
     Column {
         AuthTopPart(state = LoginScreenState.Login, viewModel)
-        Spacer(modifier = Modifier.height(16.dp))
+        AppSpacer()
         PasswordField(viewModel, isRegister = false)
         Spacer(modifier = Modifier.height(8.dp))
         ForgotPasswordLink { viewModel.onForgotPassword() }
@@ -145,11 +146,11 @@ fun RegisterView(
 ) {
     Column {
         AuthTopPart(state = LoginScreenState.Register, viewModel)
-        Spacer(modifier = Modifier.height(16.dp))
+        AppSpacer()
         LoginNameField(viewModel)
-        Spacer(modifier = Modifier.height(16.dp))
+        AppSpacer()
         PasswordField(viewModel, true)
-        Spacer(modifier = Modifier.height(16.dp))
+        AppSpacer()
         ConfirmPasswordField(viewModel)
         BottomComponent(
             LoginScreenState.Register, onGoogleLoginClick = onGoogleLoginClick
@@ -165,6 +166,6 @@ fun RegisterView(
 @Composable
 fun AuthTopPart(state: LoginScreenState, viewModel: LoginViewModel) {
     HeadingText(state)
-    Spacer(modifier = Modifier.height(16.dp))
+    AppSpacer()
     LoginEmailField(viewModel, isRegister = state == LoginScreenState.Register)
 }

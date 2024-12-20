@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
@@ -17,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.shai.pokerwithfriendsandroid.components.AppSpacer
 import com.shai.pokerwithfriendsandroid.components.HeadingTextComponent
 import com.shai.pokerwithfriendsandroid.components.MyTextField
 import com.shai.pokerwithfriendsandroid.components.PlayerList
@@ -63,22 +63,24 @@ fun TournamentDetailsScreen(
     ) {
         HeadingTextComponent("Create New Tournament")
 
-        Spacer(modifier = Modifier.height(16.dp))
+        AppSpacer()
         MyTextField(labelVal = "Tournament Name",
             vector = Icons.Filled.Create,
             fieldValue = tournament.value.name,
             onValueChange = { viewModel.updateTournamentName(it) })
 
-        Spacer(modifier = Modifier.height(16.dp))
+        AppSpacer()
         MyTextField(labelVal = "Buy-In Amount",
             vector = Icons.Filled.ShoppingCart,
             fieldValue = tournament.value.buyIn,
             textType = TextType.Number,
             onValueChange = { viewModel.updateTournamentBuyIn(it) })
 
-        Spacer(modifier = Modifier.height(16.dp))
+        AppSpacer()
         SecondaryButton("Add Players") { onNext() }
-        PlayerList(players = viewModel.tournament.value?.players)
+        PlayerList(players = viewModel.tournament.value?.players) {
+            viewModel.removePlayer(it)
+        }
         Spacer(modifier = Modifier.weight(1f))
         PrimaryButton(
             "Create",

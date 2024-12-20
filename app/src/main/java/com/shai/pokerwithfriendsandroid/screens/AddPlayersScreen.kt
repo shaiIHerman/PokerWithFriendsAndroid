@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.shai.pokerwithfriendsandroid.components.AppSpacer
 import com.shai.pokerwithfriendsandroid.components.CreateUser
 import com.shai.pokerwithfriendsandroid.components.DividerWithText
 import com.shai.pokerwithfriendsandroid.components.HeadingTextComponent
@@ -60,14 +61,15 @@ fun AddPlayersScreen(
             .padding(16.dp)
     ) {
         HeadingTextComponent("Add Players")
-        Spacer(modifier = Modifier.height(16.dp))
+        AppSpacer()
         SearchComponent(onEmptySearch = {
             showCreate = it
         }) { viewModel.updateTournamentPlayers(it) }
-        Spacer(modifier = Modifier.height(16.dp))
+        AppSpacer()
         AnimatedVisibility(visible = showCreate) {
             Column {
                 DividerWithText()
+                AppSpacer()
                 CreateUser(createPlayerViewState = createPlayerViewState) {
                     viewModel.createPlayer(it)
                 }

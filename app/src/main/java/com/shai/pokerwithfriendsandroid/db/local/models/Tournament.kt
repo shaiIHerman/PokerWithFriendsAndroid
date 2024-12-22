@@ -8,6 +8,8 @@ data class Tournament(
     @PrimaryKey val id: String,
     val name: String,
     val buyIn: String,
-    val gamesPlayed: Int,
-    val dateCreated: Long = 0
+    val playerIds: List<String>,
+    val gameIds: List<String>,
+    val dateCreated: Long = 0,
+    val adminId: String = ""
 )

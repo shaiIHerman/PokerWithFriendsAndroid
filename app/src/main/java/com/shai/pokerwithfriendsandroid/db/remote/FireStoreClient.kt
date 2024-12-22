@@ -3,9 +3,11 @@ package com.shai.pokerwithfriendsandroid.db.remote
 import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
+import com.shai.pokerwithfriendsandroid.db.remote.models.RemoteTournament
 import com.shai.pokerwithfriendsandroid.db.remote.models.User
 import kotlinx.coroutines.tasks.await
 
@@ -98,23 +100,28 @@ class FireStoreClient {
         }
 
         val query =
-            firestore.collection("tournaments").whereGreaterThan("dateCreated", firestoreTimestamp)
+            firestore.collection("tournaments").whereGreaterThan("dateUpdated", firestoreTimestamp)
                 .get().await()
 
         return query.documents.map { document ->
-            val name = document.getString("name") ?: ""
-            val buyIn = document.getString("buyIn") ?: ""
-            val gamesPlayed = document.getLong("gamesPlayed")?.toInt() ?: 0
+            val remoteTournament = document.toObject(RemoteTournament::class.java)
+            val name = remoteTournament?.name ?: ""
+            val buyIn = remoteTournament?.buyIn ?: ""
             val dateCreated =
-                document.getTimestamp("dateCreated")?.toDate()?.time ?: System.currentTimeMillis()
+                remoteTournament?.dateCreated?.toDate()?.time ?: System.currentTimeMillis()
             val id = document.id
+            val playerIds = remoteTournament?.players?.map { it.id } ?: emptyList()
+            val gameIds = remoteTournament?.games?.map { it.id } ?: emptyList()
+            val adminId = remoteTournament?.admin?.id ?: ""
             Log.d("FireStoreClient", "Document ID: $id")
             Tournament(
                 id = id,
                 name = name,
-                gamesPlayed = gamesPlayed,
+                gameIds = gameIds,
                 dateCreated = dateCreated,
-                buyIn = buyIn
+                buyIn = buyIn,
+                playerIds = playerIds,
+                adminId = adminId
             )
         }
     }
@@ -130,6 +137,15 @@ class FireStoreClient {
     suspend fun fetchUserByEmail(email: String): DocumentReference {
         return firestore.collection("users").whereEqualTo("email", email).get()
             .await().documents[0].reference
+    }
+
+    suspend fun updateTournament(gameId: DocumentReference?, tournamentId: String): Void? {
+        return firestore.collection("tournaments").document(tournamentId).update(
+                "games",
+                FieldValue.arrayUnion(gameId),
+                "dateUpdated",
+                FieldValue.serverTimestamp()
+            ).await()
     }
 }
 

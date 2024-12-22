@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
+import com.shai.pokerwithfriendsandroid.repositories.GamesRepository
 import com.shai.pokerwithfriendsandroid.repositories.TournamentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -13,7 +14,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TournamentDetailsViewModel @Inject constructor(
-    private val tournamentRepository: TournamentRepository, savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    private val tournamentRepository: TournamentRepository,
+    private val gamesRepository: GamesRepository
 ) : ViewModel() {
     private val tournamentId: String? = savedStateHandle["tournamentId"]
 
@@ -35,5 +38,15 @@ class TournamentDetailsViewModel @Inject constructor(
                 }
 
         }
+    }
+
+    fun startNewGame() = viewModelScope.launch {
+        _tournament.value?.let { gamesRepository.addGame(it).onSuccess {game ->
+            tournamentRepository.addGameToTournament(game, tournamentId!!).onSuccess {
+            }
+        }
+            .onFailure {
+                //todo: handle error
+            } }
     }
 }

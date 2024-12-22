@@ -19,18 +19,15 @@ import com.shai.pokerwithfriendsandroid.viewmodels.TournamentDetailsViewModel
 @Composable
 fun TournamentDetailsScreen(viewModel: TournamentDetailsViewModel) {
 
-    // We want to use LaunchedEffect to fetch tournaments only once when the composable is first created,
-    // and not from the viewmodel init because we want it to be in sync with the state controlled by
-    // the viewmodel but handled by the composable.
 //    LaunchedEffect(key1 = Unit) { viewModel.fetchGames() }
     Scaffold(
         topBar = { AppTopBar(title = "Tournament Details") }, containerColor = Color.Transparent
     ) { paddingValues ->
-
+//Next - parse players to tournament local object to use when creating a new game. Create a new game and then add it to the tournament.
         val tournament by viewModel.tournament.observeAsState()
         Column(modifier = Modifier.padding(paddingValues)) {
             tournament?.let {
-                TournamentDetailsContent(it)
+                TournamentDetailsContent(it){viewModel.startNewGame()}
 
             } ?: Text("Loading tournament...")
         }
@@ -38,11 +35,16 @@ fun TournamentDetailsScreen(viewModel: TournamentDetailsViewModel) {
 }
 
 @Composable
-fun TournamentDetailsContent(tournament: Tournament) {
+fun TournamentDetailsContent(tournament: Tournament, onStartNewGame: () -> Unit) {
+    val gamesPlayed = if (tournament.gameIds[0].isEmpty()) 0 else tournament.gameIds.size
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Tournament Name: ${tournament.name}")
         Text("Buy-In: ${tournament.buyIn}")
+        Text("No. of players: ${tournament.playerIds.size}")
+        Text("No. of games played: $gamesPlayed")
         Spacer(modifier = Modifier.weight(1f))
-        PrimaryButton("Start New Game")
+        PrimaryButton("Start New Game"){
+            onStartNewGame()
+        }
     }
 }

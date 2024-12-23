@@ -95,6 +95,7 @@ fun TournamentList(
 
 @Composable
 fun TournamentItem(tournament: Tournament, onItemClick: (String) -> Unit) {
+    val gamesPlayed = if (tournament.gameIds[0].isEmpty()) 0 else tournament.gameIds.size
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -112,7 +113,7 @@ fun TournamentItem(tournament: Tournament, onItemClick: (String) -> Unit) {
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "${tournament.gamesPlayed} games played",
+            text = "$gamesPlayed games played",
             style = MaterialTheme.typography.bodyMedium,
             color = Tertirary
         )

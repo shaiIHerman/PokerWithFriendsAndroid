@@ -3,6 +3,8 @@ package com.shai.pokerwithfriendsandroid.screens
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,30 +14,96 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.shai.pokerwithfriendsandroid.components.AppTopBar
+import com.shai.pokerwithfriendsandroid.components.LoadingState
 import com.shai.pokerwithfriendsandroid.components.PrimaryButton
+import com.shai.pokerwithfriendsandroid.components.ShowUsers
 import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
+import com.shai.pokerwithfriendsandroid.db.remote.models.User
+import com.shai.pokerwithfriendsandroid.screens.states.TournamentDetailsViewState
+import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentDetailsViewModel
 
 @Composable
 fun TournamentDetailsScreen(viewModel: TournamentDetailsViewModel) {
+    val tournamentDetailsViewState by viewModel.tournamentDetailsUiState.observeAsState(
+        TournamentDetailsViewState.Loading
+    )
 
-//    LaunchedEffect(key1 = Unit) { viewModel.fetchGames() }
     Scaffold(
-        topBar = { AppTopBar(title = "Tournament Details") }, containerColor = Color.Transparent
+        topBar = {
+            TournamentDetailsTopBar(uiState = tournamentDetailsViewState) { viewModel.onBackClicked() }
+        }, containerColor = Color.Transparent
     ) { paddingValues ->
-//Next - parse players to tournament local object to use when creating a new game. Create a new game and then add it to the tournament.
-        val tournament by viewModel.tournament.observeAsState()
         Column(modifier = Modifier.padding(paddingValues)) {
-            tournament?.let {
-                TournamentDetailsContent(it){viewModel.startNewGame()}
 
-            } ?: Text("Loading tournament...")
+            when (val state = tournamentDetailsViewState) {
+                TournamentDetailsViewState.Loading -> LoadingState()
+                is TournamentDetailsViewState.Idle -> {
+                    TournamentDetailsContent(
+                        state.tournament
+                    ) {
+                        BottomButton("Start New Game") {
+                            viewModel.onStartNewGame()
+                        }
+                    }
+                }
+
+                is TournamentDetailsViewState.InSession -> TournamentDetailsContent(
+                    state.tournament
+                ) {
+                    BottomButton("Game In Session ->") {
+                        {//
+                            // onNavigateToGame()
+                        }
+                    }
+                }
+
+                is TournamentDetailsViewState.Error -> TODO()
+                is TournamentDetailsViewState.NewGame -> AddPLayersToGame(
+                    state.players,
+                    onPlayerSelected = {
+                        viewModel.onPlayerSelected(it)
+                    },
+                    onConfirmClicked = {
+                        viewModel.startNewGame()
+                    })
+            }
         }
     }
 }
 
 @Composable
-fun TournamentDetailsContent(tournament: Tournament, onStartNewGame: () -> Unit) {
+fun TournamentDetailsTopBar(uiState: TournamentDetailsViewState, onBackClicked: () -> Unit) {
+    when (uiState) {
+        is TournamentDetailsViewState.NewGame -> {
+            AppTopBar(title = "Confirm Players",
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                onIconClick = { onBackClicked() })
+        }
+
+        else -> {
+            AppTopBar(title = "Tournament Details")
+        }
+    }
+}
+
+@Composable
+fun AddPLayersToGame(
+    players: List<User>,
+    onPlayerSelected: (TournamentData.AddPlayer) -> Unit,
+    onConfirmClicked: () -> Unit
+) {
+    ShowUsers(players, isAddPlayer = false) {
+        onPlayerSelected(it)
+    }
+    BottomButton("Confirm & Start") { onConfirmClicked() }
+}
+
+@Composable
+fun TournamentDetailsContent(
+    tournament: Tournament,
+    bottomButton: @Composable () -> Unit,
+) {
     val gamesPlayed = if (tournament.gameIds[0].isEmpty()) 0 else tournament.gameIds.size
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Tournament Name: ${tournament.name}")
@@ -43,8 +111,11 @@ fun TournamentDetailsContent(tournament: Tournament, onStartNewGame: () -> Unit)
         Text("No. of players: ${tournament.playerIds.size}")
         Text("No. of games played: $gamesPlayed")
         Spacer(modifier = Modifier.weight(1f))
-        PrimaryButton("Start New Game"){
-            onStartNewGame()
-        }
+        bottomButton()
     }
+}
+
+@Composable
+fun BottomButton(text: String, onClick: () -> Unit) {
+    PrimaryButton(text) { onClick() }
 }

@@ -49,22 +49,19 @@ import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 
 @Composable
 fun PlayerList(
-    players: List<TournamentData.AddPlayer>?,
-    onRemovePlayer: (TournamentData.AddPlayer) -> Unit
+    players: List<TournamentData.AddPlayer>?, onRemovePlayer: (TournamentData.AddPlayer) -> Unit
 ) {
     AppSpacer()
     Text("Selected Players:")
     if (players.isNullOrEmpty()) {
-        PlayerListItem(
-            player = TournamentData.AddPlayer(name = "You"),
+        PlayerListItem(player = TournamentData.AddPlayer(name = "You"),
             isYou = true,
             onRemovePlayer = {})
         return
     }
     LazyColumn {
         item {
-            PlayerListItem(
-                player = TournamentData.AddPlayer(name = "You"),
+            PlayerListItem(player = TournamentData.AddPlayer(name = "You"),
                 isYou = true,
                 onRemovePlayer = {})
         }
@@ -125,12 +122,11 @@ fun SearchComponent(
             AddPlayersViewModel.ScreenState.Empty -> {}
             is AddPlayersViewModel.ScreenState.Content -> {
                 if (state.results.isNotEmpty()) {
-                    ShowUsers(users = state.results, onAddClick = {
+                    ShowUsers(users = state.results, onIconClick = {
                         addPlayersViewModel.onSearchCompleted()
                         onUserSelected(it)
                     })
-                }
-                else{
+                } else {
                     AppSpacer()
                     Text("No players found", color = Color.Gray)
                 }
@@ -146,7 +142,11 @@ fun SearchComponent(
 }
 
 @Composable
-fun ShowUsers(users: List<User>, onAddClick: (TournamentData.AddPlayer) -> Unit = {}) {
+fun ShowUsers(
+    users: List<User>,
+    isAddPlayer: Boolean = true,
+    onIconClick: (TournamentData.AddPlayer) -> Unit = {}
+) {
     AppSpacer()
     Column(
         modifier = Modifier
@@ -172,14 +172,22 @@ fun ShowUsers(users: List<User>, onAddClick: (TournamentData.AddPlayer) -> Unit 
                             style = MaterialTheme.typography.bodyLarge
                         )
                         IconButton(
-                            onClick = { onAddClick(TournamentData.AddPlayer(name.name)) },
+                            onClick = { onIconClick(TournamentData.AddPlayer(name.name)) },
                             modifier = Modifier.padding(horizontal = 8.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Add Item",
-                                modifier = Modifier.size(36.dp)
-                            )
+                            if (isAddPlayer) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Add Item",
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }else{
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Remove Item",
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
                         }
                     }
                     AppSpacer()

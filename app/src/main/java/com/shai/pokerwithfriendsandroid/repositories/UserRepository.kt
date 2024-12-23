@@ -92,6 +92,12 @@ class UserRepository @Inject constructor(
             fireStoreClient.fetchUserByEmail(email)
         }
     }
+
+    suspend fun fetchUsersByIds(strings: List<String>): ApiOperation<Map<DocumentReference, User>> {
+        return safeApiCall {
+            fireStoreClient.fetchUsersByIds(strings)
+        }
+    }
 }
 object UserCache {
     private var userCache: User? = null

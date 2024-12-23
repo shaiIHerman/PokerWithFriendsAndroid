@@ -9,6 +9,7 @@ import com.shai.pokerwithfriendsandroid.db.local.models.SyncInfo
 import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
 import com.shai.pokerwithfriendsandroid.db.remote.ApiOperation
 import com.shai.pokerwithfriendsandroid.db.remote.FireStoreClient
+import com.shai.pokerwithfriendsandroid.db.remote.models.RemoteGame
 import com.shai.pokerwithfriendsandroid.db.remote.safeApiCall
 import javax.inject.Inject
 
@@ -46,9 +47,10 @@ class GamesRepository @Inject constructor(
         return allTournaments
     }
 
-    suspend fun addGame(tournamentData: Tournament): ApiOperation<DocumentReference?> {
+    suspend fun addGame(tournamentData: Tournament, playerReferences: Set<DocumentReference>): ApiOperation<DocumentReference?> {
         //todo: change the players
-        val players = tournamentData.playerIds.map { Pair(0, fireStoreClient.firestore.collection("users").document(it)) }
+//        val players = tournamentData.playerIds.map { Pair(0, fireStoreClient.firestore.collection("users").document(it)) }
+        val players = playerReferences.map { Pair(0, it) }
         val game = hashMapOf(
             "active" to true,
             "buyIn" to tournamentData.buyIn,
@@ -65,6 +67,12 @@ class GamesRepository @Inject constructor(
     suspend fun getTournamentById(tournamentId: String): ApiOperation<Tournament> {
         return safeApiCall {
             tournamentDao.getTournamentById(tournamentId)
+        }
+    }
+
+    suspend fun getGamesByIds(gameIds: List<String>): ApiOperation<List<RemoteGame?>> {
+        return safeApiCall {
+            gameIds.map { gameId -> fireStoreClient.getDocument<RemoteGame>(collectionName = "games", docId = gameId)}
         }
     }
 }

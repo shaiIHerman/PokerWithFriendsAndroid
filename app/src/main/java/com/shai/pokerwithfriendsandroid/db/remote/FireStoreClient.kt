@@ -9,6 +9,9 @@ import com.google.firebase.ktx.Firebase
 import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
 import com.shai.pokerwithfriendsandroid.db.remote.models.RemoteTournament
 import com.shai.pokerwithfriendsandroid.db.remote.models.User
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 
 class FireStoreClient {
@@ -23,6 +26,34 @@ class FireStoreClient {
         }
     }
 
+    suspend fun fetchUsersByIds(userIds: List<String>): Map<DocumentReference, User> {
+        val userCollection = firestore.collection("users")
+
+        // Create a list of DocumentReferences from the userIds
+        val documentReferences = userIds.map { userId -> userCollection.document(userId) }
+
+        // Perform a batch fetch of the documents
+        return coroutineScope {
+            val deferredUsers = documentReferences.map { docRef ->
+                async {
+                    val snapshot = docRef.get().await()
+                    val user = snapshot.toObject(User::class.java)
+
+                    // Only include in the map if the user is not null
+                    if (user != null) {
+                        docRef to user
+                    } else {
+                        null
+                    }
+                }
+            }
+
+            // Collect all the results once all the async tasks are completed
+            deferredUsers.awaitAll().filterNotNull() // Remove null entries
+                .toMap() // Convert to Map<DocumentReference, User>
+        }
+    }
+    
     suspend inline fun <reified T> getDocument(documentReference: DocumentReference): T? {
         return documentReference.get().await().toObject(T::class.java)
     }
@@ -61,14 +92,18 @@ class FireStoreClient {
     suspend fun addUserDocumentData(
         name: String, email: String
     ): DocumentReference? {
-
+        var newEmail = email
         if (name.isEmpty()) {
             throw IllegalArgumentException("Name cannot be null or empty.")
         }
 
+        if (newEmail.isEmpty()) {
+            newEmail = "$name@$name.com"
+        }
+
         val searchableToken = name.lowercase().trim()
         val userData = hashMapOf(
-            "email" to email,
+            "email" to newEmail,
             "name" to name,
             "searchable_token" to searchableToken,
             "isAuthenticated" to false
@@ -141,11 +176,8 @@ class FireStoreClient {
 
     suspend fun updateTournament(gameId: DocumentReference?, tournamentId: String): Void? {
         return firestore.collection("tournaments").document(tournamentId).update(
-                "games",
-                FieldValue.arrayUnion(gameId),
-                "dateUpdated",
-                FieldValue.serverTimestamp()
-            ).await()
+            "games", FieldValue.arrayUnion(gameId), "dateUpdated", FieldValue.serverTimestamp()
+        ).await()
     }
 }
 

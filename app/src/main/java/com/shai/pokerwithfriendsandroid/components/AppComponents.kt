@@ -417,18 +417,25 @@ fun DividerWithText() {
 }
 
 @Composable
-fun AppSpacer(){
+fun AppSpacer() {
     Spacer(modifier = Modifier.height(16.dp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppTopBar(title: String) {
+fun AppTopBar(title: String, icon: ImageVector? = null, onIconClick: (() -> Unit)? = null) {
     Column {
-        TopAppBar(
-            title = { Text(title) },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-        )
+        TopAppBar(title = { Text(title) },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+            navigationIcon = {
+                if (icon != null) {
+                    IconButton(onClick = { onIconClick?.invoke() }) {
+                        Icon(imageVector = icon, contentDescription = "icon")
+                    }
+                } else {
+                    null
+                }
+            })
         HorizontalDivider(color = Color.White)
     }
 }

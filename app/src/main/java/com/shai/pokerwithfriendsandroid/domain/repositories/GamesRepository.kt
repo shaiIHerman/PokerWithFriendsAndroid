@@ -18,39 +18,10 @@ class GamesRepository @Inject constructor(
     private val syncInfoDao: SyncInfoDao
 ) {
 
-    // Function to fetch tournaments from both Room and Firebase
-    suspend fun getTournaments(): List<TournamentEntity> {
-        // Fetch tournaments from local Room DB
-        val localTournaments = tournamentDao.getTournaments()
-
-        // Get the timestamp of the last successful sync
-        val lastSyncTimestamp = syncInfoDao.getLastSyncTimestamp()
-
-        // Fetch new or updated tournaments from Firestore
-        val remoteTournaments = fireStoreClient.fetchTournaments(lastSyncTimestamp)
-
-        // Merge local and remote tournaments
-        val allTournaments = localTournaments + remoteTournaments
-
-        // Update the sync timestamp to the most recent time from the remote tournaments
-        if (remoteTournaments.isNotEmpty()) {
-            val latestSyncTime =
-                remoteTournaments.maxOfOrNull { it.dateCreated } ?: System.currentTimeMillis()
-            syncInfoDao.insertSyncInfo(SyncInfoEntity(lastSyncTimestamp = latestSyncTime))
-        }
-
-        // Insert new tournaments into local DB (Room)
-        tournamentDao.insertTournament(remoteTournaments)
-
-        return allTournaments
-    }
-
     suspend fun addGame(
         tournamentData: TournamentEntity,
         playerIds: List<String>
     ): ApiOperation<DocumentReference?> {
-        //todo: change the players
-//        val players = tournamentData.playerIds.map { Pair(0, fireStoreClient.firestore.collection("users").document(it)) }
         val players = playerIds.map {
             Pair(
                 0,

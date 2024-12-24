@@ -11,7 +11,7 @@ import com.shai.pokerwithfriendsandroid.data.local.db.utils.Converters
 
 @Database(
     entities = [TournamentEntity::class, SyncInfoEntity::class],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

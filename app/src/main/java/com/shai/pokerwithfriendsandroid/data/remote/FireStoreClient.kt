@@ -3,10 +3,11 @@ package com.shai.pokerwithfriendsandroid.data.remote
 import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteTournament
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
 import com.shai.pokerwithfriendsandroid.domain.repositories.LocalUser
@@ -18,14 +19,6 @@ import kotlinx.coroutines.tasks.await
 class FireStoreClient {
 
     val firestore = Firebase.firestore
-
-    suspend fun getUsers(): ApiOperation<List<RemoteUser>> {
-        return safeApiCall {
-            firestore.collection("users").get().await().map { document ->
-                document.toObject(RemoteUser::class.java)
-            }
-        }
-    }
 
     suspend fun fetchUsersByIds(userIds: List<String>): List<LocalUser> {
         val userCollection = firestore.collection("users")
@@ -65,7 +58,7 @@ class FireStoreClient {
             .toObject(T::class.java)
     }
 
-    suspend fun getDocumentReference(collectionName: String, docId: String): DocumentReference{
+    suspend fun getDocumentReference(collectionName: String, docId: String): DocumentReference {
         return firestore.collection(collectionName).document(docId)
     }
 
@@ -127,7 +120,7 @@ class FireStoreClient {
         return firestore.collection(collectionName).add(data).await()
     }
 
-    suspend fun fetchTournaments(lastSyncTimestamp: Long?): List<TournamentEntity> {
+    suspend fun fetchTournaments(lastSyncTimestamp: Long?): List<RemoteTournament> {
         var firestoreTimestamp = Timestamp(0, 0)
         // Here we convert the lastSyncTimestamp to a Timestamp object compatible with Firestore
         if (lastSyncTimestamp != null) {
@@ -136,31 +129,40 @@ class FireStoreClient {
             firestoreTimestamp = Timestamp(seconds, nanoseconds.toInt())
         }
 
-        val query =
-            firestore.collection("tournaments").whereGreaterThan("dateUpdated", firestoreTimestamp)
-                .get().await()
+        return firestore.collection("tournaments")
+            .whereGreaterThan("dateUpdated", firestoreTimestamp).get().await()
+            .toObjectsWithIds<RemoteTournament>()
+//        return firestore.collection("tournaments")
+//            .whereGreaterThan("dateUpdated", firestoreTimestamp).get().await().map {
+//                val remoteTournament = it.toObject(RemoteTournament::class.java)
+//                remoteTournament.id = it.id
+//                remoteTournament
+//            }
+    }
 
-        return query.documents.map { document ->
-            val remoteTournament = document.toObject(RemoteTournament::class.java)
-            val name = remoteTournament?.name ?: ""
-            val buyIn = remoteTournament?.buyIn ?: ""
-            val dateCreated =
-                remoteTournament?.dateCreated?.toDate()?.time ?: System.currentTimeMillis()
-            val id = document.id
-            val playerIds = remoteTournament?.players?.map { it.id } ?: emptyList()
-            val gameIds = remoteTournament?.games?.map { it.id } ?: emptyList()
-            val adminId = remoteTournament?.admin?.id ?: ""
-            Log.d("FireStoreClient", "Document ID: $id")
-            TournamentEntity(
-                id = id,
-                name = name,
-                gameIds = gameIds,
-                dateCreated = dateCreated,
-                buyIn = buyIn,
-                playerIds = playerIds,
-                adminId = adminId
-            )
+    inline fun <reified T> QuerySnapshot.toObjectsWithIds(): List<T> {
+        return this.documents.map {
+            val obj = it.toObject(T::class.java)
+            // Add the document ID to the object (assumes the object has an `id` field)
+            obj?.apply {
+                // Assuming your object has a `id` field, set the document ID here
+                if (this is RemoteTournament) { // Replace with the type you're working with
+                    this.id = it.id
+                }
+            }
+                ?: throw IllegalArgumentException("Failed to parse document into ${T::class.java.name}")
         }
+    }
+
+    inline fun <reified T> DocumentSnapshot.toObjectWithId(): T? {
+        val obj = this.toObject(T::class.java)
+        // Add the document ID to the object (assuming the object has an `id` field)
+        obj?.apply {
+            if (this is RemoteTournament) { // Replace with your specific class type
+                this.id = this@toObjectWithId.id
+            }
+        }
+        return obj
     }
 
     suspend fun fetchUsersByName(searchQuery: String): List<RemoteUser> {

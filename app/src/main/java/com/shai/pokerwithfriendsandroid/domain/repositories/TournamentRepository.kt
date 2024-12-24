@@ -9,10 +9,14 @@ import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
 import com.shai.pokerwithfriendsandroid.data.remote.ApiOperation
 import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
 import com.shai.pokerwithfriendsandroid.data.remote.safeApiCall
+import com.shai.pokerwithfriendsandroid.data.sources.LocalTournamentDataSource
+import com.shai.pokerwithfriendsandroid.data.sources.RemoteTournamentDataSource
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 import javax.inject.Inject
 
 class TournamentRepository @Inject constructor(
+    private val remoteTournamentDataSource: RemoteTournamentDataSource,
+    private val localTournamentDataSource: LocalTournamentDataSource,
     private val tournamentDao: TournamentDao,
     private val fireStoreClient: FireStoreClient,
     private val syncInfoDao: SyncInfoDao
@@ -25,7 +29,7 @@ class TournamentRepository @Inject constructor(
         val lastSyncTimestamp = syncInfoDao.getLastSyncTimestamp()
 
         // Fetch new or updated tournaments from Firestore
-        val remoteTournaments = fireStoreClient.fetchTournaments(lastSyncTimestamp)
+        val remoteTournaments = remoteTournamentDataSource.fetchTournaments(lastSyncTimestamp)
 
         // Update the sync timestamp to the most recent time from the remote tournaments
         if (remoteTournaments.isNotEmpty()) {
@@ -35,7 +39,7 @@ class TournamentRepository @Inject constructor(
         }
 
         // Insert new tournaments or update existing into local DB (Room)
-        tournamentDao.insertTournament(remoteTournaments)
+        localTournamentDataSource.insertTournament(remoteTournaments)
 
         // Fetch tournaments from local Room DB
         val localTournaments = tournamentDao.getTournaments()

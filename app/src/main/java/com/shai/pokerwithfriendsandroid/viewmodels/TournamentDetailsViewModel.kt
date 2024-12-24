@@ -11,6 +11,7 @@ import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
 import com.shai.pokerwithfriendsandroid.db.remote.models.RemoteGame
 import com.shai.pokerwithfriendsandroid.db.remote.models.User
 import com.shai.pokerwithfriendsandroid.repositories.GamesRepository
+import com.shai.pokerwithfriendsandroid.repositories.LocalUser
 import com.shai.pokerwithfriendsandroid.repositories.TournamentRepository
 import com.shai.pokerwithfriendsandroid.repositories.UserRepository
 import com.shai.pokerwithfriendsandroid.screens.states.TournamentDetailsViewState
@@ -25,7 +26,8 @@ class TournamentDetailsViewModel @Inject constructor(
     private val gamesRepository: GamesRepository,
     private val userRepository: UserRepository
 ) : ViewModel() {
-    private lateinit var _players: Map<DocumentReference, User>
+    private lateinit var _players: List<Pair<Boolean, LocalUser>>
+    private lateinit var _removedPlayers: MutableMap<DocumentReference, User>
     private val tournamentId: String? = savedStateHandle["tournamentId"]
 
     private val _tournament = MutableLiveData<Tournament?>()
@@ -59,7 +61,7 @@ class TournamentDetailsViewModel @Inject constructor(
 
     private fun loadUsers(strings: List<String>) = viewModelScope.launch {
         userRepository.fetchUsersByIds(strings).onSuccess {
-            _players = it
+            _players = it.map { localUser -> Pair(false, localUser) }
             Log.d("TournamentDetailsViewModel", "Users count: ${it.size}")
         }.onFailure {
             Log.e("TournamentDetailsViewModel", "Error loading users", it)
@@ -92,8 +94,9 @@ class TournamentDetailsViewModel @Inject constructor(
     }
 
     fun startNewGame() = viewModelScope.launch {
+        val playersToAdd = _players.filter { !it.first }.map { it.second.id }
         _tournament.value?.let {
-            gamesRepository.addGame(it, _players.keys).onSuccess { game ->
+            gamesRepository.addGame(it, playersToAdd).onSuccess { game ->
                 tournamentRepository.addGameToTournament(game, tournamentId!!).onSuccess {}
                     .onFailure {
                         Log.e("TournamentDetailsViewModel", "Error adding game to tournament", it)
@@ -104,9 +107,8 @@ class TournamentDetailsViewModel @Inject constructor(
         }
     }
 
-    fun onStartNewGame() {
-        _tournamentDetailsUiState.value =
-            TournamentDetailsViewState.NewGame(_players.values.toList())
+    fun addPlayers() {
+        _tournamentDetailsUiState.value = TournamentDetailsViewState.NewGame(_players)
     }
 
     fun onBackClicked() {
@@ -114,8 +116,13 @@ class TournamentDetailsViewModel @Inject constructor(
     }
 
     fun onPlayerSelected(player: TournamentData.AddPlayer) {
-        _players = _players.filterNot { (_, user) ->
-            user.email == player.email // Replace 'name' with the field you want to check
-        }
+            val index = _players.indexOfFirst { it.second.email == player.email }
+            if (index != -1) {
+                _players = _players.toMutableList().apply {
+                    val updatedPlayer = _players[index].copy(first = !_players[index].first) // Update the boolean value
+                    this[index] = updatedPlayer // Set the updated player back to the list
+                }
+                addPlayers()
+            }
     }
 }

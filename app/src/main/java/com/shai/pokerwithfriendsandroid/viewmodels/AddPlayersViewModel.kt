@@ -6,6 +6,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shai.pokerwithfriendsandroid.db.remote.models.User
+import com.shai.pokerwithfriendsandroid.repositories.LocalUser
 import com.shai.pokerwithfriendsandroid.repositories.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,7 +35,7 @@ class AddPlayersViewModel @Inject constructor(private val userRepository: UserRe
         object Empty : ScreenState
         object Searching : ScreenState
         data class Error(val message: String) : ScreenState
-        data class Content(val results: List<User>) : ScreenState
+        data class Content(val results: List<LocalUser>) : ScreenState
     }
 
     val searchTextFieldState = TextFieldState()

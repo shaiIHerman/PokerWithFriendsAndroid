@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shai.pokerwithfriendsandroid.db.remote.models.User
+import com.shai.pokerwithfriendsandroid.repositories.LocalUser
 import com.shai.pokerwithfriendsandroid.screens.states.CreatePlayerViewState
 import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
 import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
@@ -54,14 +55,16 @@ fun PlayerList(
     AppSpacer()
     Text("Selected Players:")
     if (players.isNullOrEmpty()) {
-        PlayerListItem(player = TournamentData.AddPlayer(name = "You"),
+        PlayerListItem(
+            player = TournamentData.AddPlayer(name = "You"),
             isYou = true,
             onRemovePlayer = {})
         return
     }
     LazyColumn {
         item {
-            PlayerListItem(player = TournamentData.AddPlayer(name = "You"),
+            PlayerListItem(
+                player = TournamentData.AddPlayer(name = "You"),
                 isYou = true,
                 onRemovePlayer = {})
         }
@@ -122,7 +125,8 @@ fun SearchComponent(
             AddPlayersViewModel.ScreenState.Empty -> {}
             is AddPlayersViewModel.ScreenState.Content -> {
                 if (state.results.isNotEmpty()) {
-                    ShowUsers(users = state.results, onIconClick = {
+                    val users = state.results.map { Pair(true, it) }
+                    ShowUsers(users = users, onIconClick = {
                         addPlayersViewModel.onSearchCompleted()
                         onUserSelected(it)
                     })
@@ -143,9 +147,7 @@ fun SearchComponent(
 
 @Composable
 fun ShowUsers(
-    users: List<User>,
-    isAddPlayer: Boolean = true,
-    onIconClick: (TournamentData.AddPlayer) -> Unit = {}
+    users: List<Pair<Boolean, LocalUser>>, onIconClick: (TournamentData.AddPlayer) -> Unit = {}
 ) {
     AppSpacer()
     Column(
@@ -159,7 +161,8 @@ fun ShowUsers(
         LazyColumn(
             modifier = Modifier.fillMaxWidth()
         ) {
-            itemsIndexed(users) { index, name ->
+            itemsIndexed(users) { index, userPair ->
+                val (isAddPlayer, user) = userPair
                 Column {
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -167,12 +170,13 @@ fun ShowUsers(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = name.name,
+                            text = user.name,
                             modifier = Modifier.padding(16.dp), // Padding around the name text
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (isAddPlayer) Tertirary else Color.White
                         )
                         IconButton(
-                            onClick = { onIconClick(TournamentData.AddPlayer(name.name)) },
+                            onClick = { onIconClick(TournamentData.AddPlayer(user.name, user.email)) },
                             modifier = Modifier.padding(horizontal = 8.dp)
                         ) {
                             if (isAddPlayer) {
@@ -181,7 +185,7 @@ fun ShowUsers(
                                     contentDescription = "Add Item",
                                     modifier = Modifier.size(36.dp)
                                 )
-                            }else{
+                            } else {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = "Remove Item",

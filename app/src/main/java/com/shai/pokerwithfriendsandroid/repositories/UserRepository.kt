@@ -75,9 +75,10 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun fetchUsersByName(searchQuery: String): ApiOperation<List<User>> {
+    suspend fun fetchUsersByName(searchQuery: String): ApiOperation<List<LocalUser>> {
+        //todo: fix this id
         return safeApiCall {
-            fireStoreClient.fetchUsersByName(searchQuery)
+            fireStoreClient.fetchUsersByName(searchQuery).map { LocalUser(it.name, it.email, "") }
         }
     }
 
@@ -93,12 +94,14 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun fetchUsersByIds(strings: List<String>): ApiOperation<Map<DocumentReference, User>> {
+    suspend fun fetchUsersByIds(strings: List<String>): ApiOperation<List<LocalUser>> {
         return safeApiCall {
             fireStoreClient.fetchUsersByIds(strings)
         }
     }
 }
+
+data class LocalUser(val name: String, val email: String, val id: String)
 object UserCache {
     private var userCache: User? = null
     private var userRefCache: DocumentReference? = null

@@ -18,7 +18,7 @@ import com.shai.pokerwithfriendsandroid.components.LoadingState
 import com.shai.pokerwithfriendsandroid.components.PrimaryButton
 import com.shai.pokerwithfriendsandroid.components.ShowUsers
 import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
-import com.shai.pokerwithfriendsandroid.db.remote.models.User
+import com.shai.pokerwithfriendsandroid.repositories.LocalUser
 import com.shai.pokerwithfriendsandroid.screens.states.TournamentDetailsViewState
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentDetailsViewModel
@@ -43,7 +43,7 @@ fun TournamentDetailsScreen(viewModel: TournamentDetailsViewModel) {
                         state.tournament
                     ) {
                         BottomButton("Start New Game") {
-                            viewModel.onStartNewGame()
+                            viewModel.addPlayers()
                         }
                     }
                 }
@@ -59,8 +59,7 @@ fun TournamentDetailsScreen(viewModel: TournamentDetailsViewModel) {
                 }
 
                 is TournamentDetailsViewState.Error -> TODO()
-                is TournamentDetailsViewState.NewGame -> AddPLayersToGame(
-                    state.players,
+                is TournamentDetailsViewState.NewGame -> AddPLayersToGame(state.players,
                     onPlayerSelected = {
                         viewModel.onPlayerSelected(it)
                     },
@@ -89,11 +88,11 @@ fun TournamentDetailsTopBar(uiState: TournamentDetailsViewState, onBackClicked: 
 
 @Composable
 fun AddPLayersToGame(
-    players: List<User>,
+    players: List<Pair<Boolean, LocalUser>>,
     onPlayerSelected: (TournamentData.AddPlayer) -> Unit,
     onConfirmClicked: () -> Unit
 ) {
-    ShowUsers(players, isAddPlayer = false) {
+    ShowUsers(players) {
         onPlayerSelected(it)
     }
     BottomButton("Confirm & Start") { onConfirmClicked() }

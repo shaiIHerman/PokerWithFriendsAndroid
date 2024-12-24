@@ -9,6 +9,7 @@ import com.google.firebase.ktx.Firebase
 import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
 import com.shai.pokerwithfriendsandroid.db.remote.models.RemoteTournament
 import com.shai.pokerwithfriendsandroid.db.remote.models.User
+import com.shai.pokerwithfriendsandroid.repositories.LocalUser
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -26,7 +27,7 @@ class FireStoreClient {
         }
     }
 
-    suspend fun fetchUsersByIds(userIds: List<String>): Map<DocumentReference, User> {
+    suspend fun fetchUsersByIds(userIds: List<String>): List<LocalUser> {
         val userCollection = firestore.collection("users")
 
         // Create a list of DocumentReferences from the userIds
@@ -39,9 +40,10 @@ class FireStoreClient {
                     val snapshot = docRef.get().await()
                     val user = snapshot.toObject(User::class.java)
 
-                    // Only include in the map if the user is not null
+                    // Only include in the list if the user is not null
                     if (user != null) {
-                        docRef to user
+                        // Map the User to LocalUser
+                        LocalUser(name = user.name, email = user.email, id = docRef.id)
                     } else {
                         null
                     }
@@ -50,10 +52,10 @@ class FireStoreClient {
 
             // Collect all the results once all the async tasks are completed
             deferredUsers.awaitAll().filterNotNull() // Remove null entries
-                .toMap() // Convert to Map<DocumentReference, User>
         }
     }
-    
+
+
     suspend inline fun <reified T> getDocument(documentReference: DocumentReference): T? {
         return documentReference.get().await().toObject(T::class.java)
     }
@@ -61,6 +63,10 @@ class FireStoreClient {
     suspend inline fun <reified T> getDocument(collectionName: String, docId: String): T? {
         return firestore.collection(collectionName).document(docId).get().await()
             .toObject(T::class.java)
+    }
+
+    suspend fun getDocumentReference(collectionName: String, docId: String): DocumentReference{
+        return firestore.collection(collectionName).document(docId)
     }
 
     //todo: consider making this a generic function also there's no need for a try catch here, because of the safeApiCall function
@@ -119,10 +125,6 @@ class FireStoreClient {
 
     suspend fun createDocument(collectionName: String, data: Any): DocumentReference? {
         return firestore.collection(collectionName).add(data).await()
-    }
-
-    fun getDocumentReference(collectionName: String, docId: String): DocumentReference {
-        return firestore.collection(collectionName).document(docId)
     }
 
     suspend fun fetchTournaments(lastSyncTimestamp: Long?): List<Tournament> {

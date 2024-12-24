@@ -1,14 +1,14 @@
-package com.shai.pokerwithfriendsandroid.repositories
+package com.shai.pokerwithfriendsandroid.domain.repositories
 
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
-import com.shai.pokerwithfriendsandroid.db.local.daos.SyncInfoDao
-import com.shai.pokerwithfriendsandroid.db.local.daos.TournamentDao
-import com.shai.pokerwithfriendsandroid.db.local.models.SyncInfo
-import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
-import com.shai.pokerwithfriendsandroid.db.remote.ApiOperation
-import com.shai.pokerwithfriendsandroid.db.remote.FireStoreClient
-import com.shai.pokerwithfriendsandroid.db.remote.safeApiCall
+import com.shai.pokerwithfriendsandroid.data.local.db.daos.SyncInfoDao
+import com.shai.pokerwithfriendsandroid.data.local.db.daos.TournamentDao
+import com.shai.pokerwithfriendsandroid.data.local.db.entities.SyncInfoEntity
+import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
+import com.shai.pokerwithfriendsandroid.data.remote.ApiOperation
+import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
+import com.shai.pokerwithfriendsandroid.data.remote.safeApiCall
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 import javax.inject.Inject
 
@@ -19,7 +19,7 @@ class TournamentRepository @Inject constructor(
 ) {
 
     // Function to fetch tournaments from both Room and Firebase
-    suspend fun getTournaments(): List<Tournament> {
+    suspend fun getTournaments(): List<TournamentEntity> {
 
         // Get the timestamp of the last successful sync
         val lastSyncTimestamp = syncInfoDao.getLastSyncTimestamp()
@@ -31,7 +31,7 @@ class TournamentRepository @Inject constructor(
         if (remoteTournaments.isNotEmpty()) {
             val latestSyncTime =
                 remoteTournaments.maxOfOrNull { it.dateCreated } ?: System.currentTimeMillis()
-            syncInfoDao.insertSyncInfo(SyncInfo(lastSyncTimestamp = latestSyncTime))
+            syncInfoDao.insertSyncInfo(SyncInfoEntity(lastSyncTimestamp = latestSyncTime))
         }
 
         // Insert new tournaments or update existing into local DB (Room)
@@ -61,7 +61,7 @@ class TournamentRepository @Inject constructor(
         }
     }
 
-    suspend fun getTournamentById(tournamentId: String): ApiOperation<Tournament> {
+    suspend fun getTournamentById(tournamentId: String): ApiOperation<TournamentEntity> {
         return safeApiCall {
             tournamentDao.getTournamentById(tournamentId)
         }

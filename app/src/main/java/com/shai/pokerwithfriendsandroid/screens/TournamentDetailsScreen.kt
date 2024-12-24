@@ -17,8 +17,8 @@ import com.shai.pokerwithfriendsandroid.components.AppTopBar
 import com.shai.pokerwithfriendsandroid.components.LoadingState
 import com.shai.pokerwithfriendsandroid.components.PrimaryButton
 import com.shai.pokerwithfriendsandroid.components.ShowUsers
-import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
-import com.shai.pokerwithfriendsandroid.repositories.LocalUser
+import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
+import com.shai.pokerwithfriendsandroid.domain.repositories.LocalUser
 import com.shai.pokerwithfriendsandroid.screens.states.TournamentDetailsViewState
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentDetailsViewModel
@@ -100,7 +100,7 @@ fun AddPLayersToGame(
 
 @Composable
 fun TournamentDetailsContent(
-    tournament: Tournament,
+    tournament: TournamentEntity,
     bottomButton: @Composable () -> Unit,
 ) {
     val gamesPlayed = if (tournament.gameIds[0].isEmpty()) 0 else tournament.gameIds.size

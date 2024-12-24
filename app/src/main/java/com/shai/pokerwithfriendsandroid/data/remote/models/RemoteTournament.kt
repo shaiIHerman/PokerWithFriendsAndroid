@@ -1,4 +1,4 @@
-package com.shai.pokerwithfriendsandroid.db.remote.models
+package com.shai.pokerwithfriendsandroid.data.remote.models
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference

@@ -1,4 +1,4 @@
-package com.shai.pokerwithfriendsandroid.db.remote
+package com.shai.pokerwithfriendsandroid.data.remote
 
 import android.util.Log
 import com.google.firebase.Timestamp
@@ -6,10 +6,10 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
-import com.shai.pokerwithfriendsandroid.db.remote.models.RemoteTournament
-import com.shai.pokerwithfriendsandroid.db.remote.models.User
-import com.shai.pokerwithfriendsandroid.repositories.LocalUser
+import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
+import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteTournament
+import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
+import com.shai.pokerwithfriendsandroid.domain.repositories.LocalUser
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -19,10 +19,10 @@ class FireStoreClient {
 
     val firestore = Firebase.firestore
 
-    suspend fun getUsers(): ApiOperation<List<User>> {
+    suspend fun getUsers(): ApiOperation<List<RemoteUser>> {
         return safeApiCall {
             firestore.collection("users").get().await().map { document ->
-                document.toObject(User::class.java)
+                document.toObject(RemoteUser::class.java)
             }
         }
     }
@@ -38,7 +38,7 @@ class FireStoreClient {
             val deferredUsers = documentReferences.map { docRef ->
                 async {
                     val snapshot = docRef.get().await()
-                    val user = snapshot.toObject(User::class.java)
+                    val user = snapshot.toObject(RemoteUser::class.java)
 
                     // Only include in the list if the user is not null
                     if (user != null) {
@@ -127,7 +127,7 @@ class FireStoreClient {
         return firestore.collection(collectionName).add(data).await()
     }
 
-    suspend fun fetchTournaments(lastSyncTimestamp: Long?): List<Tournament> {
+    suspend fun fetchTournaments(lastSyncTimestamp: Long?): List<TournamentEntity> {
         var firestoreTimestamp = Timestamp(0, 0)
         // Here we convert the lastSyncTimestamp to a Timestamp object compatible with Firestore
         if (lastSyncTimestamp != null) {
@@ -151,7 +151,7 @@ class FireStoreClient {
             val gameIds = remoteTournament?.games?.map { it.id } ?: emptyList()
             val adminId = remoteTournament?.admin?.id ?: ""
             Log.d("FireStoreClient", "Document ID: $id")
-            Tournament(
+            TournamentEntity(
                 id = id,
                 name = name,
                 gameIds = gameIds,
@@ -163,11 +163,11 @@ class FireStoreClient {
         }
     }
 
-    suspend fun fetchUsersByName(searchQuery: String): List<User> {
+    suspend fun fetchUsersByName(searchQuery: String): List<RemoteUser> {
         val normalizedQuery = searchQuery.lowercase().trim()
         return firestore.collection("users").orderBy("searchable_token").startAt(normalizedQuery)
             .endAt("$normalizedQuery\uf8ff").get().await().map { document ->
-                document.toObject(User::class.java)
+                document.toObject(RemoteUser::class.java)
             }
     }
 

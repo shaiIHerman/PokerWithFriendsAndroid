@@ -6,8 +6,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.DocumentReference
-import com.shai.pokerwithfriendsandroid.repositories.TournamentRepository
-import com.shai.pokerwithfriendsandroid.repositories.UserRepository
+import com.shai.pokerwithfriendsandroid.domain.repositories.TournamentRepository
+import com.shai.pokerwithfriendsandroid.domain.repositories.UserRepository
 import com.shai.pokerwithfriendsandroid.screens.states.CreatePlayerViewState
 import com.shai.pokerwithfriendsandroid.screens.states.CreateTournamentViewState
 import dagger.hilt.android.lifecycle.HiltViewModel

@@ -9,7 +9,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.GoogleAuthProvider
 import com.shai.pokerwithfriendsandroid.auth.AuthService
-import com.shai.pokerwithfriendsandroid.repositories.UserRepository
+import com.shai.pokerwithfriendsandroid.domain.repositories.UserRepository
 import com.shai.pokerwithfriendsandroid.screens.states.AuthState
 import com.shai.pokerwithfriendsandroid.screens.states.LoginScreenState
 import com.shai.pokerwithfriendsandroid.utils.PasswordValidator

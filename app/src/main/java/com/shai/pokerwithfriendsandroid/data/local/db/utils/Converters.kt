@@ -1,4 +1,4 @@
-package com.shai.pokerwithfriendsandroid.db.local.utils
+package com.shai.pokerwithfriendsandroid.data.local.db.utils
 
 import androidx.room.TypeConverter
 

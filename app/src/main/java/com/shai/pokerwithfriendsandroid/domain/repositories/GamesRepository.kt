@@ -1,27 +1,25 @@
-package com.shai.pokerwithfriendsandroid.repositories
+package com.shai.pokerwithfriendsandroid.domain.repositories
 
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
-import com.shai.pokerwithfriendsandroid.db.local.daos.GamesDao
-import com.shai.pokerwithfriendsandroid.db.local.daos.SyncInfoDao
-import com.shai.pokerwithfriendsandroid.db.local.daos.TournamentDao
-import com.shai.pokerwithfriendsandroid.db.local.models.SyncInfo
-import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
-import com.shai.pokerwithfriendsandroid.db.remote.ApiOperation
-import com.shai.pokerwithfriendsandroid.db.remote.FireStoreClient
-import com.shai.pokerwithfriendsandroid.db.remote.models.RemoteGame
-import com.shai.pokerwithfriendsandroid.db.remote.safeApiCall
+import com.shai.pokerwithfriendsandroid.data.local.db.daos.SyncInfoDao
+import com.shai.pokerwithfriendsandroid.data.local.db.daos.TournamentDao
+import com.shai.pokerwithfriendsandroid.data.local.db.entities.SyncInfoEntity
+import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
+import com.shai.pokerwithfriendsandroid.data.remote.ApiOperation
+import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
+import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
+import com.shai.pokerwithfriendsandroid.data.remote.safeApiCall
 import javax.inject.Inject
 
 class GamesRepository @Inject constructor(
-    private val gamesDao: GamesDao,
     private val tournamentDao: TournamentDao,
     private val fireStoreClient: FireStoreClient,
     private val syncInfoDao: SyncInfoDao
 ) {
 
     // Function to fetch tournaments from both Room and Firebase
-    suspend fun getTournaments(): List<Tournament> {
+    suspend fun getTournaments(): List<TournamentEntity> {
         // Fetch tournaments from local Room DB
         val localTournaments = tournamentDao.getTournaments()
 
@@ -38,7 +36,7 @@ class GamesRepository @Inject constructor(
         if (remoteTournaments.isNotEmpty()) {
             val latestSyncTime =
                 remoteTournaments.maxOfOrNull { it.dateCreated } ?: System.currentTimeMillis()
-            syncInfoDao.insertSyncInfo(SyncInfo(lastSyncTimestamp = latestSyncTime))
+            syncInfoDao.insertSyncInfo(SyncInfoEntity(lastSyncTimestamp = latestSyncTime))
         }
 
         // Insert new tournaments into local DB (Room)
@@ -48,7 +46,7 @@ class GamesRepository @Inject constructor(
     }
 
     suspend fun addGame(
-        tournamentData: Tournament,
+        tournamentData: TournamentEntity,
         playerIds: List<String>
     ): ApiOperation<DocumentReference?> {
         //todo: change the players
@@ -72,7 +70,7 @@ class GamesRepository @Inject constructor(
         }
     }
 
-    suspend fun getTournamentById(tournamentId: String): ApiOperation<Tournament> {
+    suspend fun getTournamentById(tournamentId: String): ApiOperation<TournamentEntity> {
         return safeApiCall {
             tournamentDao.getTournamentById(tournamentId)
         }

@@ -7,13 +7,13 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.DocumentReference
-import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
-import com.shai.pokerwithfriendsandroid.db.remote.models.RemoteGame
-import com.shai.pokerwithfriendsandroid.db.remote.models.User
-import com.shai.pokerwithfriendsandroid.repositories.GamesRepository
-import com.shai.pokerwithfriendsandroid.repositories.LocalUser
-import com.shai.pokerwithfriendsandroid.repositories.TournamentRepository
-import com.shai.pokerwithfriendsandroid.repositories.UserRepository
+import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
+import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
+import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
+import com.shai.pokerwithfriendsandroid.domain.repositories.GamesRepository
+import com.shai.pokerwithfriendsandroid.domain.repositories.LocalUser
+import com.shai.pokerwithfriendsandroid.domain.repositories.TournamentRepository
+import com.shai.pokerwithfriendsandroid.domain.repositories.UserRepository
 import com.shai.pokerwithfriendsandroid.screens.states.TournamentDetailsViewState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -27,11 +27,11 @@ class TournamentDetailsViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : ViewModel() {
     private lateinit var _players: List<Pair<Boolean, LocalUser>>
-    private lateinit var _removedPlayers: MutableMap<DocumentReference, User>
+    private lateinit var _removedPlayers: MutableMap<DocumentReference, RemoteUser>
     private val tournamentId: String? = savedStateHandle["tournamentId"]
 
-    private val _tournament = MutableLiveData<Tournament?>()
-    val tournament: LiveData<Tournament?> = _tournament
+    private val _tournament = MutableLiveData<TournamentEntity?>()
+    val tournament: LiveData<TournamentEntity?> = _tournament
 
     private val _games = MutableLiveData<List<RemoteGame?>>()
     val games: LiveData<List<RemoteGame?>> = _games

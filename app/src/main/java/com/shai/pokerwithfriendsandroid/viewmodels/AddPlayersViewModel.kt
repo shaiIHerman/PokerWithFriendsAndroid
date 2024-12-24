@@ -5,9 +5,8 @@ import androidx.compose.foundation.text.input.delete
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shai.pokerwithfriendsandroid.db.remote.models.User
-import com.shai.pokerwithfriendsandroid.repositories.LocalUser
-import com.shai.pokerwithfriendsandroid.repositories.UserRepository
+import com.shai.pokerwithfriendsandroid.domain.repositories.LocalUser
+import com.shai.pokerwithfriendsandroid.domain.repositories.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow

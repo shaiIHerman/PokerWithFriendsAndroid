@@ -1,8 +1,7 @@
 package com.shai.pokerwithfriendsandroid.di
 
 
-import com.shai.pokerwithfriendsandroid.db.remote.FireStoreClient
-import com.shai.pokerwithfriendsandroid.network.KtorClient
+import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

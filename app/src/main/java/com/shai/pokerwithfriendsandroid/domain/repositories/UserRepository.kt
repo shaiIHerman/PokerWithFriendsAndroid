@@ -1,13 +1,13 @@
-package com.shai.pokerwithfriendsandroid.repositories
+package com.shai.pokerwithfriendsandroid.domain.repositories
 
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentReference
 import com.shai.pokerwithfriendsandroid.auth.AuthService
-import com.shai.pokerwithfriendsandroid.db.remote.ApiOperation
-import com.shai.pokerwithfriendsandroid.db.remote.FireStoreClient
-import com.shai.pokerwithfriendsandroid.db.remote.models.User
-import com.shai.pokerwithfriendsandroid.db.remote.safeApiCall
+import com.shai.pokerwithfriendsandroid.data.remote.ApiOperation
+import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
+import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
+import com.shai.pokerwithfriendsandroid.data.remote.safeApiCall
 import javax.inject.Inject
 
 class UserRepository @Inject constructor(
@@ -15,7 +15,7 @@ class UserRepository @Inject constructor(
 ) {
 
     fun getUserRef(): DocumentReference? = UserCache.getUserRef()
-    fun getUser(): User? = UserCache.getUser()
+    fun getUser(): RemoteUser? = UserCache.getUser()
 
 
     suspend fun updateCurrentUser(firebaseUser: FirebaseUser) : DocumentReference{
@@ -23,22 +23,22 @@ class UserRepository @Inject constructor(
             "users",
             firebaseUser.uid
         )
-        val userCache = fireStoreClient.getDocument<User>(userRefCache!!)
+        val userCache = fireStoreClient.getDocument<RemoteUser>(userRefCache!!)
         UserCache.updateUserCache(userRefCache, userCache!!)
         return userRefCache!!
     }
 
     suspend fun registerNewUser(
         email: String, password: String, name: String
-    ): ApiOperation<User?> {
+    ): ApiOperation<RemoteUser?> {
         val authUser = authService.signUpWithEmail(email, password)
         return safeApiCall { register(authUser?.uid ?: "", name, email) }
     }
 
-    private suspend fun register(uid: String, name: String, email: String): User? {
+    private suspend fun register(uid: String, name: String, email: String): RemoteUser? {
         val userRefCache = fireStoreClient.getDocumentReference("users", uid)
         fireStoreClient.setUserDocumentData(userRefCache!!, email, name)
-        val userCache = fireStoreClient.getDocument<User>(userRefCache!!)
+        val userCache = fireStoreClient.getDocument<RemoteUser>(userRefCache!!)
         UserCache.updateUserCache(userRefCache, userCache!!)
         return userCache
     }
@@ -46,10 +46,10 @@ class UserRepository @Inject constructor(
     suspend fun loginUser(
         email: String,
         password: String,
-    ): ApiOperation<User?> {
+    ): ApiOperation<RemoteUser?> {
         val authUser = authService.loginWithEmail(email, password)
         return safeApiCall {
-            val userCache = fireStoreClient.getDocument<User>(
+            val userCache = fireStoreClient.getDocument<RemoteUser>(
                 collectionName = "users", docId = authUser?.uid ?: ""
             )
             val userRefCache = fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
@@ -58,10 +58,10 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun loginWithGoogle(credential: AuthCredential): ApiOperation<User?> {
+    suspend fun loginWithGoogle(credential: AuthCredential): ApiOperation<RemoteUser?> {
         val authUser = authService.loginWithGoogle(credential)
         return safeApiCall {
-            val userExists = fireStoreClient.getDocument<User>(
+            val userExists = fireStoreClient.getDocument<RemoteUser>(
                 collectionName = "users", docId = authUser?.uid ?: ""
             )
             if (userExists != null) {
@@ -103,13 +103,13 @@ class UserRepository @Inject constructor(
 
 data class LocalUser(val name: String, val email: String, val id: String)
 object UserCache {
-    private var userCache: User? = null
+    private var userCache: RemoteUser? = null
     private var userRefCache: DocumentReference? = null
 
     fun getUserRef(): DocumentReference? = userRefCache
-    fun getUser(): User? = userCache
+    fun getUser(): RemoteUser? = userCache
 
-    fun updateUserCache(userRef: DocumentReference, user: User) {
+    fun updateUserCache(userRef: DocumentReference, user: RemoteUser) {
         userRefCache = userRef
         userCache = user
     }

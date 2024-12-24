@@ -1,7 +1,7 @@
-package com.shai.pokerwithfriendsandroid.db.remote.models
+package com.shai.pokerwithfriendsandroid.data.remote.models
 
 import com.google.firebase.firestore.DocumentReference
 
-data class User(
+data class RemoteUser(
     val name: String = "", val email: String = "", val tournaments: List<DocumentReference>? = null
 )

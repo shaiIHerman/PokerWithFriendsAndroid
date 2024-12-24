@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
 import com.shai.pokerwithfriendsandroid.auth.AuthService
-import com.shai.pokerwithfriendsandroid.db.remote.safeApiCall
-import com.shai.pokerwithfriendsandroid.repositories.UserRepository
+import com.shai.pokerwithfriendsandroid.data.remote.safeApiCall
+import com.shai.pokerwithfriendsandroid.domain.repositories.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

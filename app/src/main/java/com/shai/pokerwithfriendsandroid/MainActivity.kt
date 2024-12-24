@@ -7,7 +7,7 @@ import androidx.compose.material3.Scaffold
 import androidx.navigation.compose.rememberNavController
 import com.shai.pokerwithfriendsandroid.auth.AuthService
 import com.shai.pokerwithfriendsandroid.components.NavigationHost
-import com.shai.pokerwithfriendsandroid.db.remote.FireStoreClient
+import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
 import com.shai.pokerwithfriendsandroid.ui.theme.PokerWithFriendsTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

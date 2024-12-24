@@ -3,8 +3,7 @@ package com.shai.pokerwithfriendsandroid.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
-import com.shai.pokerwithfriendsandroid.repositories.TournamentRepository
+import com.shai.pokerwithfriendsandroid.domain.repositories.TournamentRepository
 import com.shai.pokerwithfriendsandroid.screens.states.TournamentsViewState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

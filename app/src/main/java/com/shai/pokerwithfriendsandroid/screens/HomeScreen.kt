@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.shai.pokerwithfriendsandroid.components.AppTopBar
 import com.shai.pokerwithfriendsandroid.components.LoadingState
-import com.shai.pokerwithfriendsandroid.db.local.models.Tournament
+import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
 import com.shai.pokerwithfriendsandroid.screens.states.TournamentsViewState
 import com.shai.pokerwithfriendsandroid.ui.theme.BorderColor
 import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
@@ -84,7 +84,7 @@ fun HomeScreen(
 
 @Composable
 fun TournamentList(
-    paddingValues: PaddingValues, tournaments: List<Tournament>, onItemClick: (String) -> Unit
+    paddingValues: PaddingValues, tournaments: List<TournamentEntity>, onItemClick: (String) -> Unit
 ) {
     LazyColumn(modifier = Modifier.padding(paddingValues)) {
         items(tournaments) { tournament ->
@@ -94,7 +94,7 @@ fun TournamentList(
 }
 
 @Composable
-fun TournamentItem(tournament: Tournament, onItemClick: (String) -> Unit) {
+fun TournamentItem(tournament: TournamentEntity, onItemClick: (String) -> Unit) {
     val gamesPlayed = if (tournament.gameIds[0].isEmpty()) 0 else tournament.gameIds.size
     Row(
         modifier = Modifier

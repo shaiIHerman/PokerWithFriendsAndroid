@@ -20,13 +20,12 @@ class TournamentsViewModel @Inject constructor(
     val state: StateFlow<TournamentsViewState> = _state
 
     fun fetchTournaments() {
+        _state.value = TournamentsViewState.Loading
         viewModelScope.launch {
-            try {
-                _state.value = TournamentsViewState.Loading
-                val tournaments = tournamentRepository.getTournaments()
-                _state.value = TournamentsViewState.Success(tournaments)
-            } catch (e: Exception) {
-                Log.e("TournamentsViewModel", "Error fetching tournaments", e)
+            tournamentRepository.getTournaments().onSuccess {
+                _state.value = TournamentsViewState.Success(it)
+            }.onFailure {
+                Log.e("TournamentsViewModel", "Error fetching tournaments", it)
                 _state.value = TournamentsViewState.Error("Failed to load tournaments")
             }
         }

@@ -38,7 +38,6 @@ object TournamentModule {
         return TournamentRepository(
             remoteTournamentDataSource,
             localTournamentDataSource,
-            tournamentDao,
             firestoreClient,
             syncInfoDao
         )

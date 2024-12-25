@@ -10,6 +10,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
+import com.shai.pokerwithfriendsandroid.domain.models.LocalTournament
 import com.shai.pokerwithfriendsandroid.domain.repositories.GamesRepository
 import com.shai.pokerwithfriendsandroid.domain.repositories.LocalUser
 import com.shai.pokerwithfriendsandroid.domain.repositories.TournamentRepository
@@ -30,8 +31,8 @@ class TournamentDetailsViewModel @Inject constructor(
     private lateinit var _removedPlayers: MutableMap<DocumentReference, RemoteUser>
     private val tournamentId: String? = savedStateHandle["tournamentId"]
 
-    private val _tournament = MutableLiveData<TournamentEntity?>()
-    val tournament: LiveData<TournamentEntity?> = _tournament
+    private val _tournament = MutableLiveData<LocalTournament?>()
+    val tournament: LiveData<LocalTournament?> = _tournament
 
     private val _games = MutableLiveData<List<RemoteGame?>>()
     val games: LiveData<List<RemoteGame?>> = _games

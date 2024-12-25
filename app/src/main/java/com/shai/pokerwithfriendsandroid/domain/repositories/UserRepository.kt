@@ -4,10 +4,10 @@ import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentReference
 import com.shai.pokerwithfriendsandroid.auth.AuthService
-import com.shai.pokerwithfriendsandroid.data.remote.ApiOperation
 import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
-import com.shai.pokerwithfriendsandroid.data.remote.safeApiCall
+import com.shai.pokerwithfriendsandroid.utils.ApiOperation
+import com.shai.pokerwithfriendsandroid.utils.safeApiCall
 import javax.inject.Inject
 
 class UserRepository @Inject constructor(
@@ -18,14 +18,13 @@ class UserRepository @Inject constructor(
     fun getUser(): RemoteUser? = UserCache.getUser()
 
 
-    suspend fun updateCurrentUser(firebaseUser: FirebaseUser) : DocumentReference{
-         val userRefCache = fireStoreClient.getDocumentReference(
-            "users",
-            firebaseUser.uid
+    suspend fun updateCurrentUser(firebaseUser: FirebaseUser): DocumentReference {
+        val userRefCache = fireStoreClient.getDocumentReference(
+            "users", firebaseUser.uid
         )
-        val userCache = fireStoreClient.getDocument<RemoteUser>(userRefCache!!)
+        val userCache = fireStoreClient.getDocument<RemoteUser>(userRefCache)
         UserCache.updateUserCache(userRefCache, userCache!!)
-        return userRefCache!!
+        return userRefCache
     }
 
     suspend fun registerNewUser(
@@ -35,10 +34,10 @@ class UserRepository @Inject constructor(
         return safeApiCall { register(authUser?.uid ?: "", name, email) }
     }
 
-    private suspend fun register(uid: String, name: String, email: String): RemoteUser? {
+    private suspend fun register(uid: String, name: String, email: String): RemoteUser {
         val userRefCache = fireStoreClient.getDocumentReference("users", uid)
-        fireStoreClient.setUserDocumentData(userRefCache!!, email, name)
-        val userCache = fireStoreClient.getDocument<RemoteUser>(userRefCache!!)
+        fireStoreClient.setUserDocumentData(userRefCache, email, name)
+        val userCache = fireStoreClient.getDocument<RemoteUser>(userRefCache)
         UserCache.updateUserCache(userRefCache, userCache!!)
         return userCache
     }

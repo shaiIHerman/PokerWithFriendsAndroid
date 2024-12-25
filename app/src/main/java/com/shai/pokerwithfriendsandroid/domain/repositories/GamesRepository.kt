@@ -1,15 +1,14 @@
 package com.shai.pokerwithfriendsandroid.domain.repositories
 
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
 import com.shai.pokerwithfriendsandroid.data.local.db.daos.SyncInfoDao
 import com.shai.pokerwithfriendsandroid.data.local.db.daos.TournamentDao
-import com.shai.pokerwithfriendsandroid.data.local.db.entities.SyncInfoEntity
 import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
-import com.shai.pokerwithfriendsandroid.data.remote.ApiOperation
 import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
-import com.shai.pokerwithfriendsandroid.data.remote.safeApiCall
+import com.shai.pokerwithfriendsandroid.domain.models.LocalTournament
+import com.shai.pokerwithfriendsandroid.utils.ApiOperation
+import com.shai.pokerwithfriendsandroid.utils.safeApiCall
 import javax.inject.Inject
 
 class GamesRepository @Inject constructor(
@@ -19,13 +18,11 @@ class GamesRepository @Inject constructor(
 ) {
 
     suspend fun addGame(
-        tournamentData: TournamentEntity,
-        playerIds: List<String>
-    ): ApiOperation<DocumentReference?> {
+        tournamentData: LocalTournament, playerIds: List<String>
+    ): ApiOperation<String> {
         val players = playerIds.map {
             Pair(
-                0,
-                fireStoreClient.getDocumentReference(collectionName = "users", docId = it)
+                0, fireStoreClient.getDocumentReference(collectionName = "users", docId = it)
             )
         }
         val game = hashMapOf(
@@ -51,8 +48,7 @@ class GamesRepository @Inject constructor(
         return safeApiCall {
             gameIds.map { gameId ->
                 fireStoreClient.getDocument<RemoteGame>(
-                    collectionName = "games",
-                    docId = gameId
+                    collectionName = "games", docId = gameId
                 )
             }
         }

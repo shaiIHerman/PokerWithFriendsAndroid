@@ -1,3 +1,4 @@
+/*
 package com.shai.pokerwithfriendsandroid.network
 
 import io.ktor.client.HttpClient
@@ -54,4 +55,4 @@ sealed interface ApiOperation<T> {
         if (this is Failure) block(exception)
         return this
     }
-}
+}*/

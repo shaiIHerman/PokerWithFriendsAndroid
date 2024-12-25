@@ -1,6 +1,7 @@
 package com.shai.pokerwithfriendsandroid.di
 
 
+import com.shai.pokerwithfriendsandroid.data.remote.FireStoreAPI
 import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
 import dagger.Module
 import dagger.Provides
@@ -14,7 +15,13 @@ class DBModule {
 
     @Provides
     @Singleton
-    fun providesFireStoreClient(): FireStoreClient {
-        return FireStoreClient()
+    fun providesFireStoreAPI(): FireStoreAPI {
+        return FireStoreAPI()
+    }
+
+    @Provides
+    @Singleton
+    fun providesFireStoreClient(fireStoreAPI: FireStoreAPI): FireStoreClient {
+        return FireStoreClient(fireStoreAPI)
     }
 }

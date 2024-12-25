@@ -5,7 +5,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.shai.pokerwithfriendsandroid.domain.models.LocalTournament
 
 data class RemoteTournament(
-    var id: String = "",
+    override var id: String = "",
     val name: String,
     val buyIn: String,
     val players: List<DocumentReference>,
@@ -13,7 +13,7 @@ data class RemoteTournament(
     val dateCreated: Timestamp,
     val dateUpdated: Timestamp,
     val admin: DocumentReference?,
-) {
+) :WithId{
     constructor() : this(
         "", "", "", emptyList(), emptyList(), Timestamp.now(), Timestamp.now(), null
     )
@@ -21,6 +21,7 @@ data class RemoteTournament(
 
 fun RemoteTournament.toLocalTournament(): LocalTournament {
     val dateCreated = dateCreated.toDate().time
+    val dateUpdated = dateUpdated.toDate().time
     val playerIds = players.map { it.id }
     val gameIds = games?.map { it.id } ?: emptyList()
     val adminId = admin?.id ?: ""
@@ -29,6 +30,7 @@ fun RemoteTournament.toLocalTournament(): LocalTournament {
         name = name,
         gameIds = gameIds,
         dateCreated = dateCreated,
+        dateUpdated = dateUpdated,
         buyIn = buyIn,
         playerIds = playerIds,
         adminId = adminId

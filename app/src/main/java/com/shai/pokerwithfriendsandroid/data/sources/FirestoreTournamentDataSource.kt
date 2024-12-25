@@ -21,7 +21,7 @@ class FirestoreTournamentDataSource @Inject constructor(private val firestoreCli
 
     override suspend fun addTournament(tournament: HashMap<String, Any?>): ApiOperation<String> {
         return safeApiCall {
-            firestoreClient.createDocument(collectionName = "tournaments", data = tournament)
+            firestoreClient.createTournament(data = tournament)
         }
     }
 }

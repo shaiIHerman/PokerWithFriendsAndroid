@@ -1,8 +1,10 @@
 package com.shai.pokerwithfriendsandroid.data.remote
 
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -12,7 +14,27 @@ import kotlinx.coroutines.tasks.await
 class FireStoreAPI {
     val firestore = Firebase.firestore
 
+    /** Generic Queries **/
+
+    fun getCollection(collectionName: String): CollectionReference {
+        return firestore.collection(collectionName)
+    }
+
+    suspend inline fun <reified T> getDocument(documentReference: DocumentReference): T? {
+        return documentReference.get().await().toObject(T::class.java)
+    }
+
+    suspend inline fun <reified T> getDocument(collectionName: String, docId: String): T? {
+        return firestore.collection(collectionName).document(docId).get().await()
+            .toObject(T::class.java)
+    }
+
+    suspend fun getDocumentReference(collectionName: String, docId: String): DocumentReference {
+        return firestore.collection(collectionName).document(docId)
+    }
+
     /** Read Queries **/
+
     suspend inline fun <reified T> fetchCollectionItemsByLastUpdate(
         collectionName: String, lastSyncTimestamp: Timestamp
     ): List<T> {
@@ -21,12 +43,23 @@ class FireStoreAPI {
     }
 
     suspend inline fun <reified T> fetchCollectionItemsBySearchableToken(
-        collectionName: String,
-        normalizedQuery: String
+        collectionName: String, normalizedQuery: String
     ): List<T> {
         return firestore.collection(collectionName).orderBy("searchable_token")
             .startAt(normalizedQuery).endAt("$normalizedQuery\uf8ff").get().await()
             .toObjectsWithIds()
+    }
+
+    suspend fun getDocumentReferenceWithEqualQuery(
+        collectionName: String, field: String, value: String
+    ): DocumentReference {
+        return firestore.collection(collectionName).whereEqualTo(field, value).get()
+            .await().documents[0].reference
+    }
+
+    /** Create Queries **/
+    suspend fun createDocument(collectionName: String, data: Any): String {
+        return firestore.collection(collectionName).add(data).await().id
     }
 
     /** Write Queries **/
@@ -39,6 +72,17 @@ class FireStoreAPI {
 
     suspend fun setDocumentData(documentReference: DocumentReference, data: Any) {
         documentReference.set(data).await()
+    }
+
+    suspend fun updateDocumentWithReferences(
+        collectionName: String,
+        docId: String,
+        field: String,
+        value: FieldValue,
+    ): Void? {
+        return firestore.collection(collectionName).document(docId).update(
+            field, value, "dateUpdated", FieldValue.serverTimestamp()
+        ).await()
     }
 
     /** Extension Helpers **/

@@ -19,10 +19,8 @@ class UserRepository @Inject constructor(
 
 
     suspend fun updateCurrentUser(firebaseUser: FirebaseUser): DocumentReference {
-        val userRefCache = fireStoreClient.getDocumentReference(
-            "users", firebaseUser.uid
-        )
-        val userCache = fireStoreClient.getDocument<RemoteUser>(userRefCache)
+        val userRefCache = fireStoreClient.getUserDocumentReference(firebaseUser.uid)
+        val userCache = fireStoreClient.getUserByDocReference(userRefCache)
         UserCache.updateUserCache(userRefCache, userCache!!)
         return userRefCache
     }
@@ -35,9 +33,9 @@ class UserRepository @Inject constructor(
     }
 
     private suspend fun register(uid: String, name: String, email: String): RemoteUser {
-        val userRefCache = fireStoreClient.getDocumentReference("users", uid)
+        val userRefCache = fireStoreClient.getUserDocumentReference( uid)
         fireStoreClient.setUserDocumentData(userRefCache, email, name)
-        val userCache = fireStoreClient.getDocument<RemoteUser>(userRefCache)
+        val userCache = fireStoreClient.getUserByDocReference(userRefCache)
         UserCache.updateUserCache(userRefCache, userCache!!)
         return userCache
     }
@@ -48,10 +46,8 @@ class UserRepository @Inject constructor(
     ): ApiOperation<RemoteUser?> {
         val authUser = authService.loginWithEmail(email, password)
         return safeApiCall {
-            val userCache = fireStoreClient.getDocument<RemoteUser>(
-                collectionName = "users", docId = authUser?.uid ?: ""
-            )
-            val userRefCache = fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
+            val userCache = fireStoreClient.getUserById(userId = authUser?.uid ?: "")
+            val userRefCache = fireStoreClient.getUserDocumentReference(authUser?.uid ?: "")
             UserCache.updateUserCache(userRefCache, userCache!!)
             userCache
         }
@@ -60,12 +56,10 @@ class UserRepository @Inject constructor(
     suspend fun loginWithGoogle(credential: AuthCredential): ApiOperation<RemoteUser?> {
         val authUser = authService.loginWithGoogle(credential)
         return safeApiCall {
-            val userExists = fireStoreClient.getDocument<RemoteUser>(
-                collectionName = "users", docId = authUser?.uid ?: ""
-            )
+            val userExists = fireStoreClient.getUserById(userId = authUser?.uid ?: "")
             if (userExists != null) {
                 val userRefCache =
-                    fireStoreClient.getDocumentReference("users", authUser?.uid ?: "")
+                    fireStoreClient.getUserDocumentReference(authUser?.uid ?: "")
                 UserCache.updateUserCache(userRefCache, userExists)
                 userExists
             } else {

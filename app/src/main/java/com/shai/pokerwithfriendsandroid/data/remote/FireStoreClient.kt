@@ -5,6 +5,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteTournament
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
 import com.shai.pokerwithfriendsandroid.domain.repositories.LocalUser
@@ -16,10 +17,9 @@ import javax.inject.Inject
 
 class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI) {
 
-    val firestore = Firebase.firestore
-
+    /** User Queries **/
     suspend fun fetchUsersByIds(userIds: List<String>): List<LocalUser> {
-        val userCollection = firestore.collection("users")
+        val userCollection = fireStoreAPI.getCollection("users")
 
         // Create a list of DocumentReferences from the userIds
         val documentReferences = userIds.map { userId -> userCollection.document(userId) }
@@ -44,20 +44,6 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
             // Collect all the results once all the async tasks are completed
             deferredUsers.awaitAll().filterNotNull() // Remove null entries
         }
-    }
-
-
-    suspend inline fun <reified T> getDocument(documentReference: DocumentReference): T? {
-        return documentReference.get().await().toObject(T::class.java)
-    }
-
-    suspend inline fun <reified T> getDocument(collectionName: String, docId: String): T? {
-        return firestore.collection(collectionName).document(docId).get().await()
-            .toObject(T::class.java)
-    }
-
-    suspend fun getDocumentReference(collectionName: String, docId: String): DocumentReference {
-        return firestore.collection(collectionName).document(docId)
     }
 
     //todo: consider making this a generic function also there's no need for a try catch here, because of the safeApiCall function
@@ -102,8 +88,29 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
         return fireStoreAPI.addDataToCollection("users", data = userData)
     }
 
-    suspend fun createDocument(collectionName: String, data: Any): String {
-        return firestore.collection(collectionName).add(data).await().id
+    suspend fun fetchUsersByName(searchQuery: String): List<RemoteUser> {
+        val normalizedQuery = searchQuery.lowercase().trim()
+        return fireStoreAPI.fetchCollectionItemsBySearchableToken("users", normalizedQuery)
+    }
+
+    suspend fun fetchUserByEmail(email: String): DocumentReference {
+        return fireStoreAPI.getDocumentReferenceWithEqualQuery(
+            collectionName = "users",
+            field = "email",
+            value = email
+        )
+    }
+
+    suspend fun getUserDocumentReference(docId: String): DocumentReference {
+        return fireStoreAPI.getDocumentReference(collectionName = "users", docId = docId)
+    }
+
+    suspend fun getUserByDocReference(userDocRef: DocumentReference): RemoteUser? {
+        return fireStoreAPI.getDocument<RemoteUser>(userDocRef)
+    }
+
+    suspend fun getUserById(userId: String): RemoteUser? {
+        return fireStoreAPI.getDocument<RemoteUser>(collectionName = "users", docId = userId)
     }
 
     /** Tournament Queries **/
@@ -119,21 +126,27 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
         return fireStoreAPI.fetchCollectionItemsByLastUpdate("tournaments", firestoreTimestamp)
     }
 
-
-    suspend fun fetchUsersByName(searchQuery: String): List<RemoteUser> {
-        val normalizedQuery = searchQuery.lowercase().trim()
-        return fireStoreAPI.fetchCollectionItemsBySearchableToken("users", normalizedQuery)
-    }
-
-    suspend fun fetchUserByEmail(email: String): DocumentReference {
-        return firestore.collection("users").whereEqualTo("email", email).get()
-            .await().documents[0].reference
-    }
-
     suspend fun updateTournament(gameId: String, tournamentId: String): Void? {
-        val gameRef = firestore.collection("games").document(gameId)
-        return firestore.collection("tournaments").document(tournamentId).update(
-            "games", FieldValue.arrayUnion(gameRef), "dateUpdated", FieldValue.serverTimestamp()
-        ).await()
+        val gameRef = fireStoreAPI.getDocumentReference("games", gameId)
+        return fireStoreAPI.updateDocumentWithReferences(
+            collectionName = "tournaments",
+            docId = tournamentId,
+            field = "games",
+            value = FieldValue.arrayUnion(gameRef)
+        )
+    }
+
+    suspend fun createTournament(data: HashMap<String, Any?>): String {
+        return fireStoreAPI.createDocument("tournaments", data)
+    }
+
+    /** Game Queries **/
+
+    suspend fun createGame(data: Any): String {
+        return fireStoreAPI.createDocument("games", data)
+    }
+
+    suspend fun getGameById(gameId: String): RemoteGame? {
+        return fireStoreAPI.getDocument<RemoteGame>(collectionName = "games", docId = gameId)
     }
 }

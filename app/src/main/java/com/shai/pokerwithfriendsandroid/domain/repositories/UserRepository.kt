@@ -8,6 +8,7 @@ import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
 import com.shai.pokerwithfriendsandroid.utils.ApiOperation
 import com.shai.pokerwithfriendsandroid.utils.safeApiCall
+import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 import javax.inject.Inject
 
 class UserRepository @Inject constructor(

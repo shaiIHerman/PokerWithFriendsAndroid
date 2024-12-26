@@ -20,7 +20,7 @@ class TournamentRepository @Inject constructor(
 ) {
 
     // Function to fetch tournaments from both Room and Firebase
-    suspend fun getTournaments(): ApiOperation<List<LocalTournament>> {
+    suspend fun getTournamentsForUser(): ApiOperation<List<LocalTournament>> {
 
         // Get the timestamp of the last successful sync
         val lastSyncTimestampResult = safeApiCall { syncInfoDao.getLastSyncTimestamp() }
@@ -30,7 +30,7 @@ class TournamentRepository @Inject constructor(
         val lastSyncTimestamp = (lastSyncTimestampResult as ApiOperation.Success).data
 
         // Fetch new or updated tournaments from Firestore
-        val remoteTournamentsResult = remoteTournamentDataSource.fetchTournaments(lastSyncTimestamp)
+        val remoteTournamentsResult = remoteTournamentDataSource.fetchTournamentsForUser(lastSyncTimestamp)
         if (remoteTournamentsResult is ApiOperation.Failure) {
             return remoteTournamentsResult
         }
@@ -56,7 +56,7 @@ class TournamentRepository @Inject constructor(
     suspend fun addTournament(tournamentData: TournamentData): ApiOperation<String> {
         val players = tournamentData.players?.map { it.documentReference }
         val updatedPlayers = players?.plus(tournamentData.admin)
-        val tournament = hashMapOf(
+        val remoteTournamentData = hashMapOf(
             "name" to tournamentData.name,
             "buyIn" to tournamentData.buyIn,
             "players" to updatedPlayers,
@@ -64,7 +64,7 @@ class TournamentRepository @Inject constructor(
             "dateCreated" to FieldValue.serverTimestamp(),
             "dateUpdated" to FieldValue.serverTimestamp()
         )
-        return remoteTournamentDataSource.addTournament(tournament = tournament)
+        return remoteTournamentDataSource.addTournament(tournament = remoteTournamentData)
     }
 
     suspend fun getTournamentById(tournamentId: String): ApiOperation<LocalTournament> {

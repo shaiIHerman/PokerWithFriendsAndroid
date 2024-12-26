@@ -22,7 +22,7 @@ class TournamentsViewModel @Inject constructor(
     fun fetchTournaments() {
         _state.value = TournamentsViewState.Loading
         viewModelScope.launch {
-            tournamentRepository.getTournaments().onSuccess {
+            tournamentRepository.getTournamentsForUser().onSuccess {
                 _state.value = TournamentsViewState.Success(it)
             }.onFailure {
                 Log.e("TournamentsViewModel", "Error fetching tournaments", it)

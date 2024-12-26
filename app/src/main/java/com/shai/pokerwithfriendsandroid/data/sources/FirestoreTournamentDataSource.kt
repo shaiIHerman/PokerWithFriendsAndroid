@@ -10,9 +10,9 @@ import javax.inject.Inject
 class FirestoreTournamentDataSource @Inject constructor(private val firestoreClient: FireStoreClient) :
     RemoteTournamentDataSource {
 
-    override suspend fun fetchTournaments(lastSyncTimestamp: Long?): ApiOperation<List<LocalTournament>> {
+    override suspend fun fetchTournamentsForUser(lastSyncTimestamp: Long?): ApiOperation<List<LocalTournament>> {
         return safeApiCall {
-            val remoteTournaments = firestoreClient.fetchTournamentsByLastUpdate(lastSyncTimestamp)
+            val remoteTournaments = firestoreClient.fetchTournamentsByLastUpdateForUser(lastSyncTimestamp)
             remoteTournaments.map { remoteTournament ->
                 remoteTournament.toLocalTournament()
             }
@@ -21,7 +21,7 @@ class FirestoreTournamentDataSource @Inject constructor(private val firestoreCli
 
     override suspend fun addTournament(tournament: HashMap<String, Any?>): ApiOperation<String> {
         return safeApiCall {
-            firestoreClient.createTournament(data = tournament)
+            firestoreClient.createTournamentAndSyncUsers(data = tournament)
         }
     }
 }

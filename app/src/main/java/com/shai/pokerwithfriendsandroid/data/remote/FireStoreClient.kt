@@ -3,12 +3,11 @@ package com.shai.pokerwithfriendsandroid.data.remote
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteTournament
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
 import com.shai.pokerwithfriendsandroid.domain.repositories.LocalUser
+import com.shai.pokerwithfriendsandroid.domain.repositories.UserCache
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -95,9 +94,7 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
 
     suspend fun fetchUserByEmail(email: String): DocumentReference {
         return fireStoreAPI.getDocumentReferenceWithEqualQuery(
-            collectionName = "users",
-            field = "email",
-            value = email
+            collectionName = "users", field = "email", value = email
         )
     }
 
@@ -113,9 +110,20 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
         return fireStoreAPI.getDocument<RemoteUser>(collectionName = "users", docId = userId)
     }
 
+    private suspend fun updateUserWithTournamentReference(
+        playerReference: DocumentReference, tournamentReference: DocumentReference
+    ) {
+        fireStoreAPI.updateDocumentWithReferences(
+            collectionName = "users",
+            docId = playerReference.id,
+            field = "tournaments",
+            value = FieldValue.arrayUnion(tournamentReference)
+        )
+    }
+
     /** Tournament Queries **/
 
-    suspend fun fetchTournamentsByLastUpdate(lastSyncTimestamp: Long?): List<RemoteTournament> {
+    suspend fun fetchTournamentsByLastUpdateForUser(lastSyncTimestamp: Long?): List<RemoteTournament> {
         var firestoreTimestamp = Timestamp(0, 0)
         // Here we convert the lastSyncTimestamp to a Timestamp object compatible with Firestore
         if (lastSyncTimestamp != null) {
@@ -123,7 +131,12 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
             val nanoseconds = (lastSyncTimestamp % 1000) * 1000000
             firestoreTimestamp = Timestamp(seconds, nanoseconds.toInt())
         }
-        return fireStoreAPI.fetchCollectionItemsByLastUpdate("tournaments", firestoreTimestamp)
+
+        val user = UserCache.getUser()
+
+        return fireStoreAPI.fetchCollectionItemsByLastUpdate(
+            documentReferences = user?.tournaments, lastSyncTimestamp = firestoreTimestamp
+        )
     }
 
     suspend fun updateTournament(gameId: String, tournamentId: String): Void? {
@@ -136,14 +149,20 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
         )
     }
 
-    suspend fun createTournament(data: HashMap<String, Any?>): String {
-        return fireStoreAPI.createDocument("tournaments", data)
+    suspend fun createTournamentAndSyncUsers(data: HashMap<String, Any?>): String {
+        val tournament = fireStoreAPI.createDocument("tournaments", data)
+        val players = data["players"] as List<DocumentReference>
+        players.map {
+            updateUserWithTournamentReference(it, tournament)
+        }
+        // todo: this now has dual responsibility, consider splitting it up later
+        return tournament.id
     }
 
     /** Game Queries **/
 
     suspend fun createGame(data: Any): String {
-        return fireStoreAPI.createDocument("games", data)
+        return fireStoreAPI.createDocument("games", data).id
     }
 
     suspend fun getGameById(gameId: String): RemoteGame? {

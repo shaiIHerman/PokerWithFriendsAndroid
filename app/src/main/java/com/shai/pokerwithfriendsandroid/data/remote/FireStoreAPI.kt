@@ -5,6 +5,7 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -36,10 +37,33 @@ class FireStoreAPI {
     /** Read Queries **/
 
     suspend inline fun <reified T> fetchCollectionItemsByLastUpdate(
-        collectionName: String, lastSyncTimestamp: Timestamp
+        collectionName: String,
+        lastSyncTimestamp: Timestamp,
+        conditions: List<FirestoreCondition> = emptyList()
     ): List<T> {
-        return firestore.collection(collectionName)
-            .whereGreaterThan("dateUpdated", lastSyncTimestamp).get().await().toObjectsWithIds<T>()
+        var query =
+            firestore.collection(collectionName).whereGreaterThan("dateUpdated", lastSyncTimestamp)
+        query = addConditionsToQuery(query, conditions)
+        return query.get().await().toObjectsWithIds<T>()
+    }
+
+
+    suspend inline fun <reified T> fetchCollectionItemsByLastUpdate(
+        documentReferences: List<DocumentReference>?,
+        lastSyncTimestamp: Timestamp,
+    ): List<T> {
+        val validDocumentReferences = mutableListOf<T>()
+        if (documentReferences == null) {
+            return validDocumentReferences
+        }
+        for (docRef in documentReferences) {
+            val documentSnapshot = docRef.get().await()
+            val dateUpdated = documentSnapshot.getTimestamp("dateUpdated")
+            if (dateUpdated != null && dateUpdated > lastSyncTimestamp) {
+                validDocumentReferences.add(documentSnapshot.toObjectWithId())
+            }
+        }
+        return validDocumentReferences
     }
 
     suspend inline fun <reified T> fetchCollectionItemsBySearchableToken(
@@ -58,8 +82,8 @@ class FireStoreAPI {
     }
 
     /** Create Queries **/
-    suspend fun createDocument(collectionName: String, data: Any): String {
-        return firestore.collection(collectionName).add(data).await().id
+    suspend fun createDocument(collectionName: String, data: Any): DocumentReference {
+        return firestore.collection(collectionName).add(data).await()
     }
 
     /** Write Queries **/
@@ -85,7 +109,7 @@ class FireStoreAPI {
         ).await()
     }
 
-    /** Extension Helpers **/
+    /** Extensions & Helpers **/
 
     inline fun <reified T> QuerySnapshot.toObjectsWithIds(): List<T> {
         return this.documents.map {
@@ -104,4 +128,27 @@ class FireStoreAPI {
         obj ?: throw IllegalArgumentException("Failed to parse document into ${T::class.java.name}")
         return obj
     }
+
+    fun addConditionsToQuery(query: Query, conditions: List<FirestoreCondition>): Query {
+        var localQuery = query
+        conditions.forEach { condition ->
+            localQuery = when (condition) {
+                is FirestoreCondition.EqualTo -> {
+                    localQuery.whereEqualTo(condition.field, condition.value)
+                }
+
+                is FirestoreCondition.GreaterThan -> {
+                    localQuery.whereGreaterThan(condition.field, condition.value)
+                }
+                // Handle other conditions here as needed
+            }
+        }
+        return localQuery
+    }
+}
+
+sealed class FirestoreCondition {
+    data class EqualTo(val field: String, val value: Any) : FirestoreCondition()
+    data class GreaterThan(val field: String, val value: Any) : FirestoreCondition()
+    // Add other conditions as needed, like whereLessThan, whereArrayContains, etc.
 }

@@ -6,7 +6,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.DocumentReference
-import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteTournament
 import com.shai.pokerwithfriendsandroid.domain.repositories.TournamentRepository
 import com.shai.pokerwithfriendsandroid.domain.repositories.UserRepository
 import com.shai.pokerwithfriendsandroid.screens.states.CreatePlayerViewState
@@ -50,8 +49,10 @@ class CreateTournamentViewModel @Inject constructor(
             _createPlayerUiState.value = CreatePlayerViewState.Idle
         }
     }
+
     fun removePlayer(player: TournamentData.AddPlayer) {
-        _tournament.value = _tournament.value?.copy(players = _tournament.value?.players?.minus(player))
+        _tournament.value =
+            _tournament.value?.copy(players = _tournament.value?.players?.minus(player))
     }
 
     fun createPlayer(newUser: TournamentData.AddPlayer) = viewModelScope.launch {
@@ -93,6 +94,7 @@ class CreateTournamentViewModel @Inject constructor(
 
         tournamentRepository.addTournament(_tournament.value!!).onSuccess {
             _createTournamentUiState.value = CreateTournamentViewState.TournamentAdded
+            Log.d("CreateTournamentViewModel", "Tournament added successfully")
         }.onFailure {
             _createTournamentUiState.value =
                 CreateTournamentViewState.Error(it.message ?: "Unknown error")

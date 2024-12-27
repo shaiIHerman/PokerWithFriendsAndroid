@@ -11,12 +11,14 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.shai.pokerwithfriendsandroid.screens.ActiveGameScreen
 import com.shai.pokerwithfriendsandroid.screens.CreateTournamentWizard
 import com.shai.pokerwithfriendsandroid.screens.HomeScreen
 import com.shai.pokerwithfriendsandroid.screens.LoginScreen
 import com.shai.pokerwithfriendsandroid.screens.SplashScreen
 import com.shai.pokerwithfriendsandroid.screens.TournamentDetailsScreen
 import com.shai.pokerwithfriendsandroid.ui.theme.Primary
+import com.shai.pokerwithfriendsandroid.viewmodels.ActiveGameViewModel
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentDetailsViewModel
 
 @Composable
@@ -65,7 +67,16 @@ fun NavigationHost(
             arguments = listOf(navArgument("tournamentId") { type = NavType.StringType })
         ) {
             val viewmodel: TournamentDetailsViewModel = hiltViewModel()
-            TournamentDetailsScreen(viewModel = viewmodel)
+            TournamentDetailsScreen(viewModel = viewmodel){
+                navController.navigate("active_game/$it")
+            }
+        }
+        composable(
+            route = "active_game/{gameId}",
+            arguments = listOf(navArgument("gameId") { type = NavType.StringType })
+        ) {
+            val viewmodel: ActiveGameViewModel = hiltViewModel()
+            ActiveGameScreen(viewModel = viewmodel)
         }
     }
 }

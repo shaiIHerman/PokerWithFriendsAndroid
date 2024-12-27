@@ -102,6 +102,7 @@ class CreateTournamentViewModel @Inject constructor(
     }
 }
 
+//  Todo: move to domain or use @LocalTournament instead
 data class TournamentData(
     val name: String = "",
     val buyIn: String = "",

@@ -3,13 +3,19 @@ package com.shai.pokerwithfriendsandroid.domain.repositories
 import com.google.firebase.firestore.FieldValue
 import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
+import com.shai.pokerwithfriendsandroid.data.sources.RemoteGameDataSource
+import com.shai.pokerwithfriendsandroid.domain.models.LocalGame
 import com.shai.pokerwithfriendsandroid.domain.models.LocalTournament
 import com.shai.pokerwithfriendsandroid.utils.ApiOperation
 import com.shai.pokerwithfriendsandroid.utils.safeApiCall
 import javax.inject.Inject
 
-class GamesRepository @Inject constructor(private val fireStoreClient: FireStoreClient) {
+class GamesRepository @Inject constructor(
+    private val gameDataSource: RemoteGameDataSource,
+    private val fireStoreClient: FireStoreClient
+) {
 
+    //todo: remove firestore client
     suspend fun addGame(
         tournamentData: LocalTournament, playerIds: List<String>
     ): ApiOperation<String> {
@@ -22,12 +28,14 @@ class GamesRepository @Inject constructor(private val fireStoreClient: FireStore
             "players" to players,
             "dateCreated" to FieldValue.serverTimestamp()
         )
-        return safeApiCall { fireStoreClient.createGame(data = game) }
+        return gameDataSource.createGame(game = game)
     }
 
-    suspend fun getGamesByIds(gameIds: List<String>): ApiOperation<List<RemoteGame?>> {
-        return safeApiCall {
-            gameIds.map { gameId -> fireStoreClient.getGameById(gameId = gameId) }
-        }
+    suspend fun getGamesByIds(gameIds: List<String>): ApiOperation<List<LocalGame>> {
+        return gameDataSource.fetchGamesForTournament(gameIds = gameIds)
+    }
+
+    suspend fun getGameById(gameId: String) : ApiOperation<LocalGame?> {
+        return gameDataSource.getGameById(gameId)
     }
 }

@@ -1,5 +1,6 @@
 package com.shai.pokerwithfriendsandroid.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -24,10 +25,12 @@ import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentDetailsViewModel
 
 @Composable
-fun TournamentDetailsScreen(viewModel: TournamentDetailsViewModel) {
+fun TournamentDetailsScreen(viewModel: TournamentDetailsViewModel, onNavigateToGame: (String?) -> Unit) {
     val tournamentDetailsViewState by viewModel.tournamentDetailsUiState.observeAsState(
         TournamentDetailsViewState.Loading
     )
+
+    val games by viewModel.games.observeAsState()
 
     Scaffold(
         topBar = {
@@ -52,9 +55,8 @@ fun TournamentDetailsScreen(viewModel: TournamentDetailsViewModel) {
                     state.tournament
                 ) {
                     BottomButton("Game In Session ->") {
-                        {//
-                            // onNavigateToGame()
-                        }
+                        Log.d("TournamentDetailsScreen", "Games: ${games?.last()?.id}")
+                        onNavigateToGame(games?.last()?.id)
                     }
                 }
 

@@ -7,9 +7,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.DocumentReference
-import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
+import com.shai.pokerwithfriendsandroid.domain.models.LocalGame
 import com.shai.pokerwithfriendsandroid.domain.models.LocalTournament
 import com.shai.pokerwithfriendsandroid.domain.repositories.GamesRepository
 import com.shai.pokerwithfriendsandroid.domain.repositories.LocalUser
@@ -34,8 +34,8 @@ class TournamentDetailsViewModel @Inject constructor(
     private val _tournament = MutableLiveData<LocalTournament?>()
     val tournament: LiveData<LocalTournament?> = _tournament
 
-    private val _games = MutableLiveData<List<RemoteGame?>>()
-    val games: LiveData<List<RemoteGame?>> = _games
+    private val _games = MutableLiveData<List<LocalGame?>>()
+    val games: LiveData<List<LocalGame?>> = _games
 
     private val _gameInSession = MutableLiveData<Boolean>(false)
 
@@ -117,13 +117,14 @@ class TournamentDetailsViewModel @Inject constructor(
     }
 
     fun onPlayerSelected(player: TournamentData.AddPlayer) {
-            val index = _players.indexOfFirst { it.second.email == player.email }
-            if (index != -1) {
-                _players = _players.toMutableList().apply {
-                    val updatedPlayer = _players[index].copy(first = !_players[index].first) // Update the boolean value
-                    this[index] = updatedPlayer // Set the updated player back to the list
-                }
-                addPlayers()
+        val index = _players.indexOfFirst { it.second.email == player.email }
+        if (index != -1) {
+            _players = _players.toMutableList().apply {
+                val updatedPlayer =
+                    _players[index].copy(first = !_players[index].first) // Update the boolean value
+                this[index] = updatedPlayer // Set the updated player back to the list
             }
+            addPlayers()
+        }
     }
 }

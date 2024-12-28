@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.DocumentReference
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
+import com.shai.pokerwithfriendsandroid.domain.models.GameStatus
 import com.shai.pokerwithfriendsandroid.domain.models.LocalGame
 import com.shai.pokerwithfriendsandroid.domain.models.LocalTournament
 import com.shai.pokerwithfriendsandroid.domain.repositories.GamesRepository
@@ -85,7 +86,7 @@ class TournamentDetailsViewModel @Inject constructor(
     }
 
     private fun updateSessionState() {
-        if (_games.value != null && _games.value!![_games.value!!.size - 1]?.active == true) {
+        if (_games.value != null && _games.value!![_games.value!!.size - 1]?.status == GameStatus.Active) {
             _tournamentDetailsUiState.value =
                 TournamentDetailsViewState.InSession(_tournament.value!!, _games.value!!)
         } else {

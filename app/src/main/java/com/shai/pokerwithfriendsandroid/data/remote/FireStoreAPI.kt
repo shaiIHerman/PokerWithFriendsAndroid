@@ -23,7 +23,7 @@ class FireStoreAPI {
     }
 
     suspend inline fun <reified T> getDocument(documentReference: DocumentReference): T? {
-        return documentReference.get().await().toObject(T::class.java)
+        return documentReference.get().await().toObjectWithId()
     }
 
     suspend inline fun <reified T> getDocument(collectionName: String, docId: String): T? {

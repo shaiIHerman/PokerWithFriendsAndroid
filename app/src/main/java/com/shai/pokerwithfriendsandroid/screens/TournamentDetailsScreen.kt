@@ -25,7 +25,11 @@ import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentDetailsViewModel
 
 @Composable
-fun TournamentDetailsScreen(viewModel: TournamentDetailsViewModel, onNavigateToGame: (String?) -> Unit) {
+fun TournamentDetailsScreen(
+    viewModel: TournamentDetailsViewModel,
+    onNavigateToGame: (String?) -> Unit,
+    onBackClicked: () -> Unit
+) {
     val tournamentDetailsViewState by viewModel.tournamentDetailsUiState.observeAsState(
         TournamentDetailsViewState.Loading
     )
@@ -34,7 +38,10 @@ fun TournamentDetailsScreen(viewModel: TournamentDetailsViewModel, onNavigateToG
 
     Scaffold(
         topBar = {
-            TournamentDetailsTopBar(uiState = tournamentDetailsViewState) { viewModel.onBackClicked() }
+            TournamentDetailsTopBar(uiState = tournamentDetailsViewState,
+                onNewGameBackClicked = { viewModel.onBackClicked() }) {
+                onBackClicked()
+            }
         }, containerColor = Color.Transparent
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
@@ -74,16 +81,20 @@ fun TournamentDetailsScreen(viewModel: TournamentDetailsViewModel, onNavigateToG
 }
 
 @Composable
-fun TournamentDetailsTopBar(uiState: TournamentDetailsViewState, onBackClicked: () -> Unit) {
+fun TournamentDetailsTopBar(
+    uiState: TournamentDetailsViewState, onNewGameBackClicked: () -> Unit, onBackClicked: () -> Unit
+) {
     when (uiState) {
         is TournamentDetailsViewState.NewGame -> {
             AppTopBar(title = "Confirm Players",
                 icon = Icons.AutoMirrored.Filled.ArrowBack,
-                onIconClick = { onBackClicked() })
+                onIconClick = { onNewGameBackClicked() })
         }
 
         else -> {
-            AppTopBar(title = "Tournament Details")
+            AppTopBar(title = "Tournament Details",
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                onIconClick = { onBackClicked() })
         }
     }
 }

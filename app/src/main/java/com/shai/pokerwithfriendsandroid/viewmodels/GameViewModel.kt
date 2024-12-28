@@ -6,20 +6,22 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.shai.pokerwithfriendsandroid.domain.models.LocalGame
+import com.shai.pokerwithfriendsandroid.domain.models.LocalUser
 import com.shai.pokerwithfriendsandroid.domain.repositories.GamesRepository
-import com.shai.pokerwithfriendsandroid.screens.states.ActiveGameViewState
+import com.shai.pokerwithfriendsandroid.screens.states.GameViewState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ActiveGameViewModel @Inject constructor(
+class GameViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle, private val gamesRepository: GamesRepository
 ) : ViewModel() {
     private val gameId: String? = savedStateHandle["gameId"]
-    private val _gameDetailsUiState =
-        MutableLiveData<ActiveGameViewState>(ActiveGameViewState.Loading)
-    val gameDetailsUiState: LiveData<ActiveGameViewState> = _gameDetailsUiState
+    private lateinit var gameCache: LocalGame
+    private val _gameDetailsUiState = MutableLiveData<GameViewState>(GameViewState.Loading)
+    val gameDetailsUiState: LiveData<GameViewState> = _gameDetailsUiState
 
     init {
         gameId?.let { loadGameById(it) }
@@ -27,9 +29,16 @@ class ActiveGameViewModel @Inject constructor(
 
     private fun loadGameById(gameId: String) = viewModelScope.launch {
         gamesRepository.getGameById(gameId).onSuccess { game ->
-            _gameDetailsUiState.value = ActiveGameViewState.Success(game!!)
+            game?.let {
+                gameCache = game
+                _gameDetailsUiState.value = GameViewState.Success(game)
+            }
         }.onFailure { error ->
-            Log.e("ActiveGameViewModel", "Error loading game by ID: ${error.message}")
+            Log.e("GameViewModel", "Error loading game by ID: ${error.message}")
         }
+    }
+
+    fun removePlayer(localUser: LocalUser) {
+
     }
 }

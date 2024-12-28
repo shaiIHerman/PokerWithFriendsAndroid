@@ -2,6 +2,8 @@ package com.shai.pokerwithfriendsandroid.data.remote.models
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.PropertyName
+import com.shai.pokerwithfriendsandroid.domain.models.GameStatus
 import com.shai.pokerwithfriendsandroid.domain.models.LocalGame
 
 data class RemoteGame(
@@ -20,13 +22,24 @@ data class RemoteGame(
     }
 }
 
-fun RemoteGame.toLocalGame(): LocalGame {
+fun RemoteGame.toLocalGame(users: List<RemoteUser?>?): LocalGame {
     val dateCreated = dateCreated.toDate().time
+    val gameStatus = when (active) {
+        true -> GameStatus.Active
+        false -> GameStatus.Completed
+    }
+    var localPlayers = emptyList<LocalGame.PlayerPosition>()
+    if (users != null) {
+        localPlayers = users.map { player ->
+            val pl = players.indexOfFirst { it.player!!.id == player!!.id }
+            LocalGame.PlayerPosition(players[pl].position, player?.toLocalUser())
+        }
+    }
     return LocalGame(
         id = id,
-        active = active,
+        status = gameStatus,
         buyIn = buyIn,
-        players = players,
+        players = localPlayers,
         dateCreated = dateCreated
     )
 }

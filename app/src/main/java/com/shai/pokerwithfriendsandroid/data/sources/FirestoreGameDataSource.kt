@@ -12,7 +12,11 @@ class FirestoreGameDataSource @Inject constructor(private val firestoreClient: F
     override suspend fun fetchGamesForTournament(gameIds: List<String>): ApiOperation<List<LocalGame>> {
         return safeApiCall {
             gameIds.mapNotNull { gameId ->
-                firestoreClient.getGameById(gameId = gameId)?.toLocalGame()
+                val remoteGame = firestoreClient.getGameById(gameId = gameId)
+                val players = remoteGame?.players?.map { player ->
+                    firestoreClient.getUserByDocReference(player.player!!)
+                }
+                remoteGame?.toLocalGame(players)
             }
         }
     }
@@ -22,6 +26,12 @@ class FirestoreGameDataSource @Inject constructor(private val firestoreClient: F
     }
 
     override suspend fun getGameById(gameId: String): ApiOperation<LocalGame?> {
-        return safeApiCall { firestoreClient.getGameById(gameId = gameId)?.toLocalGame() }
+        return safeApiCall {
+            val remoteGame = firestoreClient.getGameById(gameId = gameId)
+            val players = remoteGame?.players?.map { player ->
+                firestoreClient.getUserByDocReference(player.player!!)
+            }
+            remoteGame?.toLocalGame(players)
+        }
     }
 }

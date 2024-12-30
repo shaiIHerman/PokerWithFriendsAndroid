@@ -27,19 +27,14 @@ class GameViewModel @Inject constructor(
     private val gameId: String? = savedStateHandle["gameId"]
     private val _gameDetailsUiState = MutableLiveData<GameViewState>(GameViewState.Loading)
     val gameDetailsUiState: LiveData<GameViewState> = _gameDetailsUiState
-    private val firestoreListener = FirestoreRealtimeListener()
 
     init {
         startListeningForGameUpdates()
     }
 
     private fun startListeningForGameUpdates() = viewModelScope.launch {
-        firestoreListener.listenToDocumentChanges<RemoteGame>(gameId!!).collect { remoteGame ->
-            val players = remoteGame?.players?.map { player ->
-                firestoreClient.getUserByDocReference(player.player!!)
-            }
-            Log.d("FirestoreListener", "Document snapshot: ${remoteGame?.id}")
-            _gameDetailsUiState.value = GameViewState.Success(remoteGame?.toLocalGame(players)!!)
+        gamesRepository.listenForGameUpdates(gameId!!).collect{
+            _gameDetailsUiState.value = GameViewState.Success(it)
         }
     }
 
@@ -64,9 +59,10 @@ class GameViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            gamesRepository.updatePlayerPositions(game = currentGame, gameOver = gameOver).onSuccess {
-                Log.d("GameViewModel", "Player removed successfully")
-            }.onFailure {
+            gamesRepository.updatePlayerPositions(game = currentGame, gameOver = gameOver)
+                .onSuccess {
+                    Log.d("GameViewModel", "Player removed successfully")
+                }.onFailure {
                 Log.e("GameViewModel", "Error removing player: ${it.message}")
             }
         }
@@ -78,19 +74,15 @@ class GameViewModel @Inject constructor(
     }
 
     private fun updatePlayerPositions(
-        playerPositions: List<LocalGame.PlayerPosition>,
-        removedPlayerId: String,
-        newPosition: Int
+        playerPositions: List<LocalGame.PlayerPosition>, removedPlayerId: String, newPosition: Int
     ): List<LocalGame.PlayerPosition> {
-        return playerPositions
-            .map { playerPosition ->
+        return playerPositions.map { playerPosition ->
                 if (playerPosition.player?.id == removedPlayerId) {
                     playerPosition.copy(position = newPosition)
                 } else {
                     playerPosition
                 }
-            }
-            .sortedBy { it.position }
+            }.sortedBy { it.position }
     }
 
 }

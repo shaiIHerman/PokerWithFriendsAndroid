@@ -1,6 +1,7 @@
 package com.shai.pokerwithfriendsandroid.di
 
 import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
+import com.shai.pokerwithfriendsandroid.data.remote.FirestoreRealtimeListener
 import com.shai.pokerwithfriendsandroid.data.sources.FirestoreGameDataSource
 import com.shai.pokerwithfriendsandroid.data.sources.RemoteGameDataSource
 import com.shai.pokerwithfriendsandroid.domain.repositories.GamesRepository
@@ -22,7 +23,8 @@ object GameModule {
     fun provideGameRepository(
         remoteGameDataSource: RemoteGameDataSource,
         firestoreClient: FireStoreClient,
+        firestoreListener: FirestoreRealtimeListener
     ): GamesRepository {
-        return GamesRepository(remoteGameDataSource, firestoreClient)
+        return GamesRepository(remoteGameDataSource, firestoreClient, firestoreListener)
     }
 }

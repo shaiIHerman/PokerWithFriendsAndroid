@@ -1,41 +1,43 @@
 package com.shai.pokerwithfriendsandroid.data.remote
 
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.shai.pokerwithfriendsandroid.data.remote.models.WithId
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.flow.callbackFlow
 
 class FirestoreRealtimeListener {
 
-//    private val firestore = FirebaseFirestore.getInstance()
     val firestore = Firebase.firestore
+
     // Create a flow to listen for Firestore document updates
-    inline fun <reified T> listenToDocumentChanges(documentPath: String): Flow<T?> {
+    inline fun <reified T> listenToDocumentChanges(
+        collection: String,
+        documentPath: String
+    ): Flow<T?> {
         return callbackFlow {
             // Reference to the document
-            val documentRef = firestore.collection("games").document(documentPath)
+            val documentRef = firestore.collection(collection).document(documentPath)
 
             // Add the snapshot listener
-            val listenerRegistration: ListenerRegistration = documentRef.addSnapshotListener { snapshot, exception ->
-                // If there was an error with the listener, close the flow with the exception
-                if (exception != null) {
-                    close(exception) // Close the flow with the exception
-                    return@addSnapshotListener
-                }
+            val listenerRegistration: ListenerRegistration =
+                documentRef.addSnapshotListener { snapshot, exception ->
+                    // If there was an error with the listener, close the flow with the exception
+                    if (exception != null) {
+                        close(exception) // Close the flow with the exception
+                        return@addSnapshotListener
+                    }
 
-                // Check if snapshot exists and send the value to the flow
-                if (snapshot != null && snapshot.exists()) {
-                    trySend(snapshot.toObjectWithId()) // Emit the snapshot value
-                } else {
-                    trySend(null) // Emit null if document doesn't exist
+                    // Check if snapshot exists and send the value to the flow
+                    if (snapshot != null && snapshot.exists()) {
+                        trySend(snapshot.toObjectWithId()) // Emit the snapshot value
+                    } else {
+                        trySend(null) // Emit null if document doesn't exist
+                    }
                 }
-            }
 
             // Handle the cancellation of the flow by removing the listener
             awaitClose {

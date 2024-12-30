@@ -20,7 +20,7 @@ class GamesRepository @Inject constructor(
             hashMapOf(
                 "position" to 0, "player" to fireStoreClient.getUserDocumentReference(docId = it)
             )
-//            Pair(0, fireStoreClient.getUserDocumentReference(docId = it))
+
         }
         val game = hashMapOf(
             "active" to true,
@@ -35,7 +35,17 @@ class GamesRepository @Inject constructor(
         return gameDataSource.fetchGamesForTournament(gameIds = gameIds)
     }
 
-    suspend fun getGameById(gameId: String): ApiOperation<LocalGame?> {
-        return gameDataSource.getGameById(gameId)
+    suspend fun updatePlayerPositions(game: LocalGame, gameOver: Boolean): ApiOperation<Void?> {
+        val players = game.players.map {
+            hashMapOf(
+                "position" to it.position,
+                "player" to fireStoreClient.getUserDocumentReference(docId = it.player!!.id)
+            )
+        }
+        return gameDataSource.updatePlayerPositionsForGame(
+            gameId = game.id,
+            players = players,
+            gameOver = gameOver
+        )
     }
 }

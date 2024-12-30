@@ -34,4 +34,16 @@ class FirestoreGameDataSource @Inject constructor(private val firestoreClient: F
             remoteGame?.toLocalGame(players)
         }
     }
+
+    override suspend fun updatePlayerPositionsForGame(
+        gameId: String, players: List<java.util.HashMap<String, Any>>, gameOver: Boolean
+    ): ApiOperation<Void?> {
+        return safeApiCall {
+            firestoreClient.updatePlayerPositionsForGame(
+                gameId,
+                players,
+                gameOver
+            )
+        }
+    }
 }

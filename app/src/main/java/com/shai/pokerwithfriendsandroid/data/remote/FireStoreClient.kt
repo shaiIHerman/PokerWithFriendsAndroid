@@ -6,7 +6,6 @@ import com.google.firebase.firestore.FieldValue
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteTournament
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
-import com.shai.pokerwithfriendsandroid.domain.models.LocalGame
 import com.shai.pokerwithfriendsandroid.domain.repositories.LocalUser
 import com.shai.pokerwithfriendsandroid.domain.repositories.UserCache
 import kotlinx.coroutines.async
@@ -168,5 +167,23 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
 
     suspend fun getGameById(gameId: String): RemoteGame? {
         return fireStoreAPI.getDocument<RemoteGame>(collectionName = "games", docId = gameId)
+    }
+
+    suspend fun updatePlayerPositionsForGame(
+        gameId: String,
+        players: List<HashMap<String, Any>>,
+        gameOver: Boolean
+    ): Void? {
+        val fieldsToUpdate = if (!gameOver) mapOf(
+            "players" to players,
+        ) else {
+            mapOf(
+                "players" to players,
+                "active" to false,
+            )
+        }
+        return fireStoreAPI.updateDocumentWithData(
+            collectionName = "games", docId = gameId, fieldsToUpdate = fieldsToUpdate
+        )
     }
 }

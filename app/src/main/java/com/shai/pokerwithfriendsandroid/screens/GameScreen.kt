@@ -28,6 +28,7 @@ import com.shai.pokerwithfriendsandroid.components.LoadingState
 import com.shai.pokerwithfriendsandroid.domain.models.LocalGame
 import com.shai.pokerwithfriendsandroid.domain.models.LocalUser
 import com.shai.pokerwithfriendsandroid.screens.states.GameViewState
+import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
 import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
 import com.shai.pokerwithfriendsandroid.utils.toStringDate
 import com.shai.pokerwithfriendsandroid.viewmodels.GameViewModel
@@ -48,9 +49,10 @@ fun GameScreen(viewModel: GameViewModel, onBackClicked: () -> Unit) {
 
             when (val state = gameDetailsViewState) {
                 GameViewState.Loading -> LoadingState()
-                is GameViewState.Success -> GameDetailsContent(state.game){
-                    viewModel.removePlayer(it)
+                is GameViewState.Success -> GameDetailsContent(state.game) {
+                    viewModel.onPlayerLost(it)
                 }
+
                 is GameViewState.Error -> TODO()
             }
         }
@@ -101,6 +103,8 @@ fun GamePlayerListItem(
             IconButton(onClick = { onRemovePlayer(player) }) {
                 Icon(Icons.Default.Clear, contentDescription = "Remove")
             }
+        } else if (position == 1) {
+            Text("Winner", color = BrandColor)
         } else {
             Text(position.toString(), color = Tertirary)
         }

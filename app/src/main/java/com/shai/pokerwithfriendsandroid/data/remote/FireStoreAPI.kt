@@ -9,7 +9,6 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
 import com.shai.pokerwithfriendsandroid.data.remote.models.WithId
 import kotlinx.coroutines.tasks.await
 
@@ -27,8 +26,7 @@ class FireStoreAPI {
     }
 
     suspend inline fun <reified T> getDocument(collectionName: String, docId: String): T? {
-        return firestore.collection(collectionName).document(docId).get().await()
-            .toObjectWithId()
+        return firestore.collection(collectionName).document(docId).get().await().toObjectWithId()
     }
 
     suspend fun getDocumentReference(collectionName: String, docId: String): DocumentReference {
@@ -107,6 +105,14 @@ class FireStoreAPI {
     ): Void? {
         return firestore.collection(collectionName).document(docId).update(
             field, value, "dateUpdated", FieldValue.serverTimestamp()
+        ).await()
+    }
+
+    suspend fun updateDocumentWithData(
+        collectionName: String, docId: String, fieldsToUpdate: Map<String, Any>
+    ): Void? {
+        return firestore.collection(collectionName).document(docId).update(
+            fieldsToUpdate
         ).await()
     }
 

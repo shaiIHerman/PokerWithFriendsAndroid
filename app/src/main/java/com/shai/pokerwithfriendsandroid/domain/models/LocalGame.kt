@@ -4,10 +4,10 @@ data class LocalGame(
     val id: String = "",
     val status: GameStatus,
     val buyIn: String,
-    val players: List<PlayerPosition>,
+    var players: List<PlayerPosition>,
     val dateCreated: Long
 ) {
-    data class PlayerPosition(val position: Int, val player: LocalUser?) {
+    data class PlayerPosition(var position: Int, val player: LocalUser?) {
         constructor() : this(0, null)
     }
 }

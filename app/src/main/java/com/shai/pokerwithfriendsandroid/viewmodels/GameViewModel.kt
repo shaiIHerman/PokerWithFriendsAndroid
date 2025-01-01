@@ -6,10 +6,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
-import com.shai.pokerwithfriendsandroid.data.remote.FirestoreRealtimeListener
-import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
-import com.shai.pokerwithfriendsandroid.data.remote.models.toLocalGame
 import com.shai.pokerwithfriendsandroid.domain.models.LocalGame
 import com.shai.pokerwithfriendsandroid.domain.models.LocalUser
 import com.shai.pokerwithfriendsandroid.domain.repositories.GamesRepository
@@ -20,9 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class GameViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-    private val gamesRepository: GamesRepository,
-    private val firestoreClient: FireStoreClient
+    savedStateHandle: SavedStateHandle, private val gamesRepository: GamesRepository
 ) : ViewModel() {
     private val gameId: String? = savedStateHandle["gameId"]
     private val _gameDetailsUiState = MutableLiveData<GameViewState>(GameViewState.Loading)
@@ -33,7 +27,7 @@ class GameViewModel @Inject constructor(
     }
 
     private fun startListeningForGameUpdates() = viewModelScope.launch {
-        gamesRepository.listenForGameUpdates(gameId!!).collect{
+        gamesRepository.listenForGameUpdates(gameId!!).collect {
             _gameDetailsUiState.value = GameViewState.Success(it)
         }
     }
@@ -63,8 +57,8 @@ class GameViewModel @Inject constructor(
                 .onSuccess {
                     Log.d("GameViewModel", "Player removed successfully")
                 }.onFailure {
-                Log.e("GameViewModel", "Error removing player: ${it.message}")
-            }
+                    Log.e("GameViewModel", "Error removing player: ${it.message}")
+                }
         }
     }
 
@@ -77,12 +71,12 @@ class GameViewModel @Inject constructor(
         playerPositions: List<LocalGame.PlayerPosition>, removedPlayerId: String, newPosition: Int
     ): List<LocalGame.PlayerPosition> {
         return playerPositions.map { playerPosition ->
-                if (playerPosition.player?.id == removedPlayerId) {
-                    playerPosition.copy(position = newPosition)
-                } else {
-                    playerPosition
-                }
-            }.sortedBy { it.position }
+            if (playerPosition.player?.id == removedPlayerId) {
+                playerPosition.copy(position = newPosition)
+            } else {
+                playerPosition
+            }
+        }.sortedBy { it.position }
     }
 
 }

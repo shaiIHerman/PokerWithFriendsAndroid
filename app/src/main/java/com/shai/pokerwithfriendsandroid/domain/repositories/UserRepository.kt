@@ -6,6 +6,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.shai.pokerwithfriendsandroid.auth.AuthService
 import com.shai.pokerwithfriendsandroid.data.remote.FireStoreClient
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
+import com.shai.pokerwithfriendsandroid.domain.models.LocalUser
 import com.shai.pokerwithfriendsandroid.utils.ApiOperation
 import com.shai.pokerwithfriendsandroid.utils.safeApiCall
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
@@ -95,7 +96,6 @@ class UserRepository @Inject constructor(
     }
 }
 
-data class LocalUser(val name: String, val email: String, val id: String)
 object UserCache {
     private var userCache: RemoteUser? = null
     private var userRefCache: DocumentReference? = null

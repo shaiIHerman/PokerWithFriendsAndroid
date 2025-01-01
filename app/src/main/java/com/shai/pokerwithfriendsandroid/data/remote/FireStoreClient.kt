@@ -6,7 +6,7 @@ import com.google.firebase.firestore.FieldValue
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteGame
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteTournament
 import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
-import com.shai.pokerwithfriendsandroid.domain.repositories.LocalUser
+import com.shai.pokerwithfriendsandroid.domain.models.LocalUser
 import com.shai.pokerwithfriendsandroid.domain.repositories.UserCache
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll

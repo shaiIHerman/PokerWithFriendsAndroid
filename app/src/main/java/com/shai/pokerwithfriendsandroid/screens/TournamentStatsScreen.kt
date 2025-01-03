@@ -1,12 +1,7 @@
 package com.shai.pokerwithfriendsandroid.screens
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
@@ -115,11 +110,7 @@ fun ShowPositionStats(tournament: LocalTournament) {
         CellText(text = value)
     }
     StatsTable(
-        cellWidth,
-        headerCellTitle,
-        cellText,
-        tournament.getStatsByRanking(),
-        columnCount = 4
+        cellWidth, headerCellTitle, cellText, tournament.getStatsByRanking(), columnCount = 4
     )
 }
 
@@ -148,11 +139,7 @@ fun ShowEarningsStats(tournament: LocalTournament) {
         CellText(text = value)
     }
     StatsTable(
-        cellWidth,
-        headerCellTitle,
-        cellText,
-        tournament.getStatsByAmountWon(),
-        columnCount = 2
+        cellWidth, headerCellTitle, cellText, tournament.getStatsByAmountWon(), columnCount = 2
     )
 }
 
@@ -187,11 +174,7 @@ fun ShowTop3Stats(tournament: LocalTournament) {
         CellText(text = value)
     }
     StatsTable(
-        cellWidth,
-        headerCellTitle,
-        cellText,
-        tournament.getStatsByFinalThree(),
-        columnCount = 5
+        cellWidth, headerCellTitle, cellText, tournament.getStatsByFinalThree(), columnCount = 5
     )
 }
 

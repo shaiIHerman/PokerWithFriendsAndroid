@@ -39,7 +39,6 @@ class TournamentDetailsViewModel @Inject constructor(
 
     init {
         tournamentId?.let { loadTournamentById(it) }
-        Log.d("TournamentDetailsViewModel", "Tournament ID: $tournamentId")
     }
 
     private fun loadTournamentById(id: String) {
@@ -59,17 +58,14 @@ class TournamentDetailsViewModel @Inject constructor(
                     // Only update the UI when both are done
                     _tournament.value!!.updatePlayersAndGames(users, games)
                     _tournament.value?.let { tournament ->
-//                        tournament.players = users.map { localUser -> Pair(false, localUser) }
                         tournament.games = games
                         updateSessionState()
                     }
 
                 } catch (e: Exception) {
                     Log.e("TournamentDetailsViewModel", "Error loading games or users", e)
-                    // Handle error, maybe show error message
                 }
             }.onFailure {
-                // Handle failure (e.g., show error message)
                 Log.e("TournamentDetailsViewModel", "Error loading tournament", it)
             }
         }
@@ -80,28 +76,27 @@ class TournamentDetailsViewModel @Inject constructor(
             is ApiOperation.Success -> result.data // Return the fetched users
             is ApiOperation.Failure -> {
                 Log.e("TournamentDetailsViewModel", "Error loading users", result.exception)
-                emptyList() // Return empty list in case of failure
+                emptyList()
             }
         }
     }
 
     private suspend fun loadGames(gameIds: List<String>): List<LocalGame> {
         if (gameIds.isEmpty() || gameIds[0].isEmpty()) {
-            // If no games, return an empty list or handle as needed
             return emptyList()
         }
         return when (val result = gamesRepository.getGamesByIds(gameIds)) {
             is ApiOperation.Success -> result.data // Return the fetched games
             is ApiOperation.Failure -> {
                 Log.e("TournamentDetailsViewModel", "Error loading games", result.exception)
-                emptyList() // Return empty list in case of failure
+                emptyList()
             }
         }
     }
 
     private fun updateSessionState() {
         val games = _tournament.value?.games
-        if (games != null && games.isNotEmpty() && games.last().status == GameStatus.Active) {
+        if (!games.isNullOrEmpty() && games.last().status == GameStatus.Active) {
             _tournamentDetailsUiState.value = TournamentDetailsViewState.InSession(_tournament.value!!)
         } else {
             _tournamentDetailsUiState.value = TournamentDetailsViewState.Idle(_tournament.value!!)
@@ -133,12 +128,12 @@ class TournamentDetailsViewModel @Inject constructor(
     }
 
     fun onPlayerSelected(player: TournamentData.AddPlayer) {
-        val _players = _tournament.value!!.players
-        val index = _players.indexOfFirst { it.second.email == player.email }
+        val players = _tournament.value!!.players
+        val index = players.indexOfFirst { it.second.email == player.email }
         if (index != -1) {
-            _tournament.value!!.players = _players.toMutableList().apply {
+            _tournament.value!!.players = players.toMutableList().apply {
                 val updatedPlayer =
-                    _players[index].copy(first = !_players[index].first) // Update the boolean value
+                    players[index].copy(first = !players[index].first) // Update the boolean value
                 this[index] = updatedPlayer // Set the updated player back to the list
             }
             addPlayers()

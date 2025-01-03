@@ -1,6 +1,5 @@
 package com.shai.pokerwithfriendsandroid.domain.models
 
-import android.util.Log
 import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
 
 data class LocalTournament(
@@ -16,31 +15,60 @@ data class LocalTournament(
     var games: List<LocalGame> = emptyList(),
     var statistics: HashMap<String, Statistics> = hashMapOf()
 ) {
-    fun getMoneyLeader() : String {
+    fun getStatsByRanking(): List<Pair<String, Statistics>> {
+        val orderedStatistics = statistics.toList().sortedBy { it.second.ranking }
+        return orderedStatistics.map { stats ->
+            val player = players.find { it.second.id == stats.first }
+            Pair(player?.second?.name ?: "", stats.second)
+        }
+    }
+
+    fun getStatsByAmountWon(): List<Pair<String, Statistics>> {
+        val orderedStatistics = statistics.toList().sortedBy { it.second.amountWon }.reversed()
+        return orderedStatistics.map { stats ->
+            val player = players.find { it.second.id == stats.first }
+            Pair(player?.second?.name ?: "", stats.second)
+        }
+    }
+
+    fun getStatsByFinalThree(): List<Pair<String, Statistics>> {
+        val orderedStatistics = statistics.toList().sortedWith(
+            compareBy(
+                { it.second.finalThree.firstPlace },
+                { it.second.finalThree.secondPlace },
+                { it.second.finalThree.bubble })
+        ).reversed()
+        return orderedStatistics.map { stats ->
+            val player = players.find { it.second.id == stats.first }
+            Pair(player?.second?.name ?: "", stats.second)
+        }
+    }
+
+    fun getMoneyLeader(): String {
         val leader = statistics.maxByOrNull { it.value.amountWon }
         val player = players.find { it.second.id == leader?.key }
         return player?.second?.name ?: "No current leader"
     }
 
-    fun getPositionLeader() : String {
+    fun getPositionLeader(): String {
         val leader = statistics.maxByOrNull { it.value.ranking }
         val player = players.find { it.second.id == leader?.key }
         return player?.second?.name ?: "No current leader"
     }
 
-    fun getFirstPlaceLeader() : String {
+    fun getFirstPlaceLeader(): String {
         val leader = statistics.maxByOrNull { it.value.finalThree.firstPlace }
         val player = players.find { it.second.id == leader?.key }
         return player?.second?.name ?: "No current leader"
     }
 
-    fun getSecondPlaceLeader() : String {
+    fun getSecondPlaceLeader(): String {
         val leader = statistics.maxByOrNull { it.value.finalThree.secondPlace }
         val player = players.find { it.second.id == leader?.key }
         return player?.second?.name ?: "No current leader"
     }
 
-    fun getBubbleLeader() : String {
+    fun getBubbleLeader(): String {
         val leader = statistics.maxByOrNull { it.value.finalThree.bubble }
         val player = players.find { it.second.id == leader?.key }
         return player?.second?.name ?: "No current leader"
@@ -64,44 +92,59 @@ fun LocalTournament.updatePlayersAndGames(users: List<LocalUser>, games: List<Lo
     players = users.map { localUser -> Pair(false, localUser) }
     this.games = games
     val playerStatistics: HashMap<String, Statistics> = hashMapOf()
+
     players.forEach { playerPair ->
         var ranking = 0f
         var amountWon = 0
         var gamesPlayed = 0
         val finalThree = FinalThree()
+
         for (game in games) {
-            val a = game.players!!.find { it.player!!.id == playerPair.second.id }
-            if (a != null) {
-                ranking += a.position
+            val playerInGame = game.players.find { it.player!!.id == playerPair.second.id }
+            if (playerInGame != null) {
+                // Player participated in the game
+                ranking += playerInGame.position
                 gamesPlayed++
                 amountWon -= this.buyIn.toInt()
-                when (a.position) {
+
+                // Update finalThree based on position
+                when (playerInGame.position) {
                     1 -> {
-                        amountWon += this.buyIn.toInt() * game.players.size
+                        amountWon += this.buyIn.toInt() * game.players.size - this.buyIn.toInt()
                         finalThree.firstPlace += 1
                     }
+
                     2 -> {
                         amountWon += this.buyIn.toInt()
                         finalThree.secondPlace += 1
                     }
+
                     3 -> {
                         finalThree.bubble += 1
                     }
                 }
             }
         }
-        ranking /= games.size
-        val statistics = Statistics(amountWon, gamesPlayed, ranking, finalThree)
+
+        // Adjust ranking only if the player participated in any games
+        if (gamesPlayed > 0) {
+            ranking /= gamesPlayed
+        }
+        val isAbove60 = gamesPlayed / games.size > 0.6
+        val statistics = Statistics(amountWon, gamesPlayed, ranking, finalThree, isAbove60)
         playerStatistics[playerPair.second.id] = statistics
     }
+
     this.statistics = playerStatistics
 }
+
 
 data class Statistics(
     var amountWon: Int,
     var gamesPlayed: Int,
     var ranking: Float,
-    var finalThree: FinalThree
+    var finalThree: FinalThree,
+    var isAbove60: Boolean
 )
 
 data class FinalThree(var firstPlace: Int = 0, var secondPlace: Int = 0, var bubble: Int = 0)

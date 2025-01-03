@@ -68,7 +68,8 @@ fun TournamentDetailsScreen(
                     }
                 }
 
-                is TournamentDetailsViewState.InSession -> TournamentDetailsContent(state.tournament,
+                is TournamentDetailsViewState.InSession -> TournamentDetailsContent(
+                    state.tournament,
                     onStatsClicked = {
                         onNavigateToStats(it)
                     }) {

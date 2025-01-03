@@ -3,6 +3,7 @@ package com.shai.pokerwithfriendsandroid.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
@@ -31,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -51,6 +56,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shai.pokerwithfriendsandroid.R
@@ -437,6 +443,42 @@ fun AppTopBar(title: String, icon: ImageVector? = null, onIconClick: (() -> Unit
                 }
             })
         HorizontalDivider(color = Color.White)
+    }
+}
+
+@Composable
+fun <T> Table(
+    columnCount: Int,
+    cellWidth: (index: Int) -> Dp,
+    data: List<T>,
+    modifier: Modifier = Modifier,
+    headerCellContent: @Composable (index: Int) -> Unit,
+    cellContent: @Composable (index: Int, item: T) -> Unit,
+) {
+    Surface(
+        modifier = modifier, color = Color.Transparent
+    ) {
+        LazyRow(
+            modifier = Modifier.padding(16.dp).background(color = Color.Transparent)
+        ) {
+            items((0 until columnCount).toList()) { columnIndex ->
+                Column(Modifier.background(color = Color.Transparent)) {
+                    (0..data.size).forEach { index ->
+                        Surface(
+                            border = BorderStroke(1.dp, Color.LightGray),
+                            contentColor = Color.Transparent,
+                            modifier = Modifier.width(cellWidth(columnIndex))
+                        ) {
+                            if (index == 0) {
+                                headerCellContent(columnIndex)
+                            } else {
+                                cellContent(columnIndex, data[index - 1])
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

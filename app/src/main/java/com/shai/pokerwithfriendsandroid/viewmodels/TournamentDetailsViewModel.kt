@@ -39,6 +39,7 @@ class TournamentDetailsViewModel @Inject constructor(
 
     init {
         tournamentId?.let { loadTournamentById(it) }
+        Log.d("TournamentDetailsViewModel", "Tournament ID: $tournamentId")
     }
 
     private fun loadTournamentById(id: String) {

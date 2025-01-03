@@ -17,6 +17,7 @@ import com.shai.pokerwithfriendsandroid.screens.HomeScreen
 import com.shai.pokerwithfriendsandroid.screens.LoginScreen
 import com.shai.pokerwithfriendsandroid.screens.SplashScreen
 import com.shai.pokerwithfriendsandroid.screens.TournamentDetailsScreen
+import com.shai.pokerwithfriendsandroid.screens.TournamentStatsScreen
 import com.shai.pokerwithfriendsandroid.ui.theme.Primary
 import com.shai.pokerwithfriendsandroid.viewmodels.GameViewModel
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentDetailsViewModel
@@ -69,6 +70,8 @@ fun NavigationHost(
             val viewmodel: TournamentDetailsViewModel = hiltViewModel()
             TournamentDetailsScreen(viewModel = viewmodel, onNavigateToGame = {
                 navController.navigate("active_game/$it")
+            }, onNavigateToStats = { tabIndex ->
+                navController.navigate("tournament_stats/$tabIndex")
             }) {
                 navController.navigateUp()
             }
@@ -81,6 +84,13 @@ fun NavigationHost(
             GameScreen(viewModel = viewmodel) {
                 navController.navigateUp()
             }
+        }
+        composable(
+            route = "tournament_stats/{tabIndex}",
+            arguments = listOf(navArgument("tabIndex") { type = NavType.IntType })
+        ) {
+            val viewmodel: TournamentDetailsViewModel = hiltViewModel(navController.previousBackStackEntry!!)
+            TournamentStatsScreen(viewModel = viewmodel){}
         }
     }
 }

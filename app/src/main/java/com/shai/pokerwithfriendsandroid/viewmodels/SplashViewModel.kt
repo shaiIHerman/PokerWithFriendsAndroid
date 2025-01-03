@@ -23,7 +23,7 @@ class SplashViewModel @Inject constructor(
     val isAuthenticated: StateFlow<Boolean?> = _isAuthenticated
 
     fun checkAuthentication() = viewModelScope.launch {
-        delay(1000)
+        delay(500)
         val currentUser = authService.getCurrentUser()
         Log.d("SplashViewModel", "User: ${currentUser?.email}")
         setUserCache(currentUser)

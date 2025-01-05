@@ -1,9 +1,10 @@
 package com.shai.pokerwithfriendsandroid.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
@@ -61,6 +62,7 @@ fun TournamentDetailsScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // Non-scrollable content at the top
         HeadingTextComponent("Create New Tournament")
 
         AppSpacer()
@@ -78,10 +80,20 @@ fun TournamentDetailsScreen(
 
         AppSpacer()
         SecondaryButton("Add Players") { onNext() }
-        PlayerList(players = viewModel.tournament.value?.players) {
-            viewModel.removePlayer(it)
+
+        // Scrollable PlayerList
+        Box(
+            modifier = Modifier
+                .weight(1f) // Allow it to expand within available space
+                .fillMaxWidth()
+        ) {
+            PlayerList(players = viewModel.tournament.value?.players) {
+                viewModel.removePlayer(it)
+            }
         }
-        Spacer(modifier = Modifier.weight(1f))
+
+        AppSpacer()
+
         PrimaryButton(
             "Create",
             showProgress = createTournamentViewState is CreateTournamentViewState.Adding,
@@ -90,4 +102,5 @@ fun TournamentDetailsScreen(
             viewModel.createTournament()
         }
     }
+
 }

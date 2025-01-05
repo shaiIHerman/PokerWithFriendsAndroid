@@ -14,6 +14,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +30,7 @@ import com.shai.pokerwithfriendsandroid.components.HeaderText
 import com.shai.pokerwithfriendsandroid.components.StatsTable
 import com.shai.pokerwithfriendsandroid.domain.models.LocalTournament
 import com.shai.pokerwithfriendsandroid.domain.models.Statistics
+import com.shai.pokerwithfriendsandroid.screens.states.TournamentDetailsViewState
 import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
 import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentDetailsViewModel
@@ -47,6 +49,8 @@ fun TournamentStatsScreen(viewModel: TournamentDetailsViewModel, onBackClicked: 
         NavDestination.Home, NavDestination.Episodes, NavDestination.Search
     )
     var selectedIndex by remember { mutableIntStateOf(0) }
+
+    val uiState by viewModel.tournamentDetailsUiState.collectAsState()
 
     Scaffold(topBar = {
         AppTopBar(title = "Tournament Stats",
@@ -72,10 +76,18 @@ fun TournamentStatsScreen(viewModel: TournamentDetailsViewModel, onBackClicked: 
     }, containerColor = Color.Transparent
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
-            when (selectedIndex) {
-                0 -> ShowPositionStats(viewModel.tournament.value!!)
-                1 -> ShowEarningsStats(viewModel.tournament.value!!)
-                else -> ShowTop3Stats(viewModel.tournament.value!!)
+            when (val state = uiState) {
+                is TournamentDetailsViewState.InSession, is TournamentDetailsViewState.Idle -> {
+                    val tournament = (state as? TournamentDetailsViewState.Idle)?.tournament
+                        ?: (state as? TournamentDetailsViewState.InSession)?.tournament
+                    when (selectedIndex) {
+                        0 -> ShowPositionStats(tournament!!)
+                        1 -> ShowEarningsStats(tournament!!)
+                        else -> ShowTop3Stats(tournament!!)
+                    }
+                }
+
+                else -> Text("Error showing stats")
             }
         }
     }
@@ -85,32 +97,42 @@ fun TournamentStatsScreen(viewModel: TournamentDetailsViewModel, onBackClicked: 
 fun ShowPositionStats(tournament: LocalTournament) {
     val cellWidth: (Int) -> Dp = { index ->
         when (index) {
-            0 -> 200.dp
+            0 -> 50.dp
+            1 -> 180.dp
             else -> 100.dp
         }
     }
     val headerCellTitle: @Composable (Int) -> Unit = { index ->
         val value = when (index) {
-            0 -> "Player"
-            1 -> "No. of Games"
-            2 -> "Played %"
-            3 -> "Score"
+            0 -> ""
+            1 -> "Player"
+            2 -> "No. of Games"
+            3 -> "Played %"
+            4 -> "Score"
+            5 -> "Over 60 Rank"
             else -> ""
         }
         HeaderText(text = value)
     }
-    val cellText: @Composable (Int, Pair<String, Statistics>) -> Unit = { index, item ->
+    val cellText: @Composable (Int, Pair<String, Any>) -> Unit = { index, item ->
+        val rankingStats = item.second as LocalTournament.RankingStats
         val value = when (index) {
-            0 -> item.first
-            1 -> item.second.gamesPlayed.toString()
-            2 -> "${((item.second.gamesPlayed / tournament.games.size) * 100)}%"
-            3 -> item.second.ranking.toString()
+            0 -> rankingStats.position.toString()
+            1 -> item.first
+            2 -> rankingStats.stats.gamesPlayed.toString()
+            3 -> "${((rankingStats.stats.gamesPlayed.toFloat() / tournament.games.size.toFloat()) * 100).toInt()}%"
+            4 -> String.format("%.2f", rankingStats.stats.ranking)
+            5 -> if (rankingStats.over60Position == 0) "NA" else rankingStats.over60Position.toString()
             else -> ""
         }
         CellText(text = value)
     }
     StatsTable(
-        cellWidth, headerCellTitle, cellText, tournament.getStatsByRanking(), columnCount = 4
+        cellWidth,
+        headerCellTitle,
+        cellText = cellText,
+        data = tournament.getStatsByRanking(),
+        columnCount = 6
     )
 }
 
@@ -130,16 +152,20 @@ fun ShowEarningsStats(tournament: LocalTournament) {
         }
         HeaderText(text = value)
     }
-    val cellText: @Composable (Int, Pair<String, Statistics>) -> Unit = { index, item ->
+    val cellText: @Composable (Int, Pair<String, Any>) -> Unit = { index, item ->
         val value = when (index) {
             0 -> item.first
-            1 -> item.second.amountWon.toString()
+            1 -> (item.second as Statistics).amountWon.toString()
             else -> ""
         }
         CellText(text = value)
     }
     StatsTable(
-        cellWidth, headerCellTitle, cellText, tournament.getStatsByAmountWon(), columnCount = 2
+        cellWidth = cellWidth,
+        headerCellTitle = headerCellTitle,
+        cellText = cellText,
+        tournament.getStatsByAmountWon(),
+        columnCount = 2
     )
 }
 
@@ -162,13 +188,14 @@ fun ShowTop3Stats(tournament: LocalTournament) {
         }
         HeaderText(text = value)
     }
-    val cellText: @Composable (Int, Pair<String, Statistics>) -> Unit = { index, item ->
+    val cellText: @Composable (Int, Pair<String, Any>) -> Unit = { index, item ->
+        val statistics = item.second as Statistics
         val value = when (index) {
             0 -> item.first
-            1 -> item.second.finalThree.firstPlace.toString()
-            2 -> item.second.finalThree.secondPlace.toString()
-            3 -> (item.second.finalThree.firstPlace + item.second.finalThree.secondPlace).toString()
-            4 -> item.second.finalThree.bubble.toString()
+            1 -> statistics.finalThree.firstPlace.toString()
+            2 -> statistics.finalThree.secondPlace.toString()
+            3 -> (statistics.finalThree.firstPlace + statistics.finalThree.secondPlace).toString()
+            4 -> statistics.finalThree.bubble.toString()
             else -> ""
         }
         CellText(text = value)

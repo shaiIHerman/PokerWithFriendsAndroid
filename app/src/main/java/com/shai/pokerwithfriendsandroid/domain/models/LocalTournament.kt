@@ -15,11 +15,22 @@ data class LocalTournament(
     var games: List<LocalGame> = emptyList(),
     var statistics: HashMap<String, Statistics> = hashMapOf()
 ) {
-    fun getStatsByRanking(): List<Pair<String, Statistics>> {
+    data class RankingStats(val stats: Statistics, val position: Int, val over60Position: Int)
+
+    fun getStatsByRanking(): List<Pair<String, RankingStats>> {
         val orderedStatistics = statistics.toList().sortedBy { it.second.ranking }
-        return orderedStatistics.map { stats ->
+        var over60Index = 0
+        return orderedStatistics.mapIndexed { index, stats ->
             val player = players.find { it.second.id == stats.first }
-            Pair(player?.second?.name ?: "", stats.second)
+            var over60Pos = 0
+            if (stats.second.isAbove60) {
+                over60Index++
+                over60Pos = over60Index
+            }
+            Pair(
+                player?.second?.name ?: "",
+                RankingStats(stats = stats.second, position = index + 1, over60Position = over60Pos)
+            )
         }
     }
 
@@ -33,8 +44,7 @@ data class LocalTournament(
 
     fun getStatsByFinalThree(): List<Pair<String, Statistics>> {
         val orderedStatistics = statistics.toList().sortedWith(
-            compareBy(
-                { it.second.finalThree.firstPlace },
+            compareBy({ it.second.finalThree.firstPlace },
                 { it.second.finalThree.secondPlace },
                 { it.second.finalThree.bubble })
         ).reversed()
@@ -51,7 +61,7 @@ data class LocalTournament(
     }
 
     fun getPositionLeader(): String {
-        val leader = statistics.maxByOrNull { it.value.ranking }
+        val leader = statistics.minByOrNull { it.value.ranking }
         val player = players.find { it.second.id == leader?.key }
         return player?.second?.name ?: "No current leader"
     }
@@ -91,8 +101,8 @@ fun LocalTournament.toTournamentEntity(): TournamentEntity {
 fun LocalTournament.updatePlayersAndGames(users: List<LocalUser>, games: List<LocalGame>) {
     players = users.map { localUser -> Pair(false, localUser) }
     this.games = games
+    if (games.isEmpty()) return
     val playerStatistics: HashMap<String, Statistics> = hashMapOf()
-
     players.forEach { playerPair ->
         var ranking = 0f
         var amountWon = 0
@@ -130,7 +140,7 @@ fun LocalTournament.updatePlayersAndGames(users: List<LocalUser>, games: List<Lo
         if (gamesPlayed > 0) {
             ranking /= gamesPlayed
         }
-        val isAbove60 = gamesPlayed / games.size > 0.6
+        val isAbove60 = gamesPlayed.toFloat() / games.size.toFloat() > 0.6
         val statistics = Statistics(amountWon, gamesPlayed, ranking, finalThree, isAbove60)
         playerStatistics[playerPair.second.id] = statistics
     }

@@ -66,13 +66,9 @@ class CreateTournamentViewModel @Inject constructor(
         }
     }
 
-    fun getCurrentUserRef(): DocumentReference? {
-        return userRepository.getUserRef()
-    }
-
     fun createTournament() = viewModelScope.launch {
         _createTournamentUiState.value = CreateTournamentViewState.Adding
-        val userRef = getCurrentUserRef() ?: run {
+        val userRef = userRepository.getUserRef() ?: run {
             Log.e("CreateTournamentViewModel", "User reference is not available")
             return@launch
         }

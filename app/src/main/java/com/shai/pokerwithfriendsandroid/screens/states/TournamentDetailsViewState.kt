@@ -9,6 +9,6 @@ sealed class TournamentDetailsViewState {
 
     data class InSession(val tournament: LocalTournament) : TournamentDetailsViewState()
 
-    data class NewGame(val players: List<Pair<Boolean, LocalUser>>) : TournamentDetailsViewState()
+    data class NewGame(val tournament: LocalTournament) : TournamentDetailsViewState()
     data class Error(val message: String) : TournamentDetailsViewState()
 }

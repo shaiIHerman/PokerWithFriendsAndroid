@@ -14,8 +14,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
@@ -42,9 +42,7 @@ fun TournamentDetailsScreen(
     onNavigateToStats: (Int) -> Unit,
     onBackClicked: () -> Unit
 ) {
-    val tournamentDetailsViewState by viewModel.tournamentDetailsUiState.observeAsState(
-        TournamentDetailsViewState.Loading
-    )
+    val tournamentDetailsViewState by viewModel.tournamentDetailsUiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -55,7 +53,6 @@ fun TournamentDetailsScreen(
         }, containerColor = Color.Transparent
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
-
             when (val state = tournamentDetailsViewState) {
                 TournamentDetailsViewState.Loading -> LoadingState()
                 is TournamentDetailsViewState.Idle -> {
@@ -68,21 +65,17 @@ fun TournamentDetailsScreen(
                     }
                 }
 
-                is TournamentDetailsViewState.InSession -> TournamentDetailsContent(
-                    state.tournament,
+                is TournamentDetailsViewState.InSession -> TournamentDetailsContent(state.tournament,
                     onStatsClicked = {
                         onNavigateToStats(it)
                     }) {
                     BottomButton("Game In Session ->") {
-                        Log.d(
-                            "TournamentDetailsScreen", "Games: ${state.tournament.games.last().id}"
-                        )
                         onNavigateToGame(state.tournament.games.last().id)
                     }
                 }
 
                 is TournamentDetailsViewState.Error -> TODO()
-                is TournamentDetailsViewState.NewGame -> AddPLayersToGame(state.players,
+                is TournamentDetailsViewState.NewGame -> AddPLayersToGame(state.tournament.players,
                     onPlayerSelected = {
                         viewModel.onPlayerSelected(it)
                     },
@@ -141,35 +134,39 @@ fun TournamentDetailsContent(
         HorizontalDivider()
         AppSpacer()
         Text("Leaders:")
-        Row(
-            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Position leader: ${tournament.getPositionLeader()}")
-            SeeDetails { onStatsClicked(0) }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Earnings leader: ${tournament.getMoneyLeader()}")
-            SeeDetails { onStatsClicked(1) }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("First place leader: ${tournament.getFirstPlaceLeader()}")
-            SeeDetails { onStatsClicked(2) }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Second place leader: ${tournament.getSecondPlaceLeader()}")
-            SeeDetails { onStatsClicked(2) }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Bubble leader: ${tournament.getBubbleLeader()}")
-            SeeDetails { onStatsClicked(2) }
+        if (tournament.games.isEmpty()) {
+            Text("No games played yet, no leaders to show")
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Position leader: ${tournament.getPositionLeader()}")
+                SeeDetails { onStatsClicked(0) }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Earnings leader: ${tournament.getMoneyLeader()}")
+                SeeDetails { onStatsClicked(1) }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("First place leader: ${tournament.getFirstPlaceLeader()}")
+                SeeDetails { onStatsClicked(2) }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Second place leader: ${tournament.getSecondPlaceLeader()}")
+                SeeDetails { onStatsClicked(2) }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Bubble leader: ${tournament.getBubbleLeader()}")
+                SeeDetails { onStatsClicked(2) }
+            }
         }
         Spacer(modifier = Modifier.weight(1f))
         bottomButton()

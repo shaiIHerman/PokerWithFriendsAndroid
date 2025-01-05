@@ -22,10 +22,10 @@ import com.shai.pokerwithfriendsandroid.domain.models.Statistics
 fun StatsTable(
     cellWidth: (Int) -> Dp,
     headerCellTitle: @Composable (Int) -> Unit,
-    cellText: @Composable (Int, Pair<String, Statistics>) -> Unit,
-    data: List<Pair<String, Statistics>>,
+    cellText: @Composable (Int, Pair<String, Any>) -> Unit,
+    data: List<Pair<String, Any>>,
     columnCount: Int
-){
+) {
     Table(
         columnCount = columnCount,
         cellWidth = cellWidth,

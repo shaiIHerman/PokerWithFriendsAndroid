@@ -51,24 +51,24 @@ import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 fun PlayerList(
     players: List<TournamentData.AddPlayer>?, onRemovePlayer: (TournamentData.AddPlayer) -> Unit
 ) {
-    AppSpacer()
-    Text("Selected Players:")
-    if (players.isNullOrEmpty()) {
-        PlayerListItem(
-            player = TournamentData.AddPlayer(name = "You"),
-            isYou = true,
-            onRemovePlayer = {})
-        return
-    }
-    LazyColumn {
-        item {
-            PlayerListItem(
-                player = TournamentData.AddPlayer(name = "You"),
+    Column {
+        AppSpacer()
+        Text("Selected Players:")
+        if (players.isNullOrEmpty()) {
+            PlayerListItem(player = TournamentData.AddPlayer(name = "You"),
                 isYou = true,
                 onRemovePlayer = {})
+            return
         }
-        items(players) { player ->
-            PlayerListItem(player = player, isYou = false, onRemovePlayer = onRemovePlayer)
+        LazyColumn {
+            item {
+                PlayerListItem(player = TournamentData.AddPlayer(name = "You"),
+                    isYou = true,
+                    onRemovePlayer = {})
+            }
+            items(players) { player ->
+                PlayerListItem(player = player, isYou = false, onRemovePlayer = onRemovePlayer)
+            }
         }
     }
 }
@@ -175,8 +175,14 @@ fun ShowUsers(
                             color = if (isAddPlayer) Tertirary else Color.White
                         )
                         IconButton(
-                            onClick = { onIconClick(TournamentData.AddPlayer(user.name, user.email)) },
-                            modifier = Modifier.padding(horizontal = 8.dp)
+                            onClick = {
+                                onIconClick(
+                                    TournamentData.AddPlayer(
+                                        user.name,
+                                        user.email
+                                    )
+                                )
+                            }, modifier = Modifier.padding(horizontal = 8.dp)
                         ) {
                             if (isAddPlayer) {
                                 Icon(

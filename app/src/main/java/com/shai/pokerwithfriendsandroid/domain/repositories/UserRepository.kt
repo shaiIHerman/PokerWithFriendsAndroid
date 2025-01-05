@@ -9,7 +9,6 @@ import com.shai.pokerwithfriendsandroid.data.remote.models.RemoteUser
 import com.shai.pokerwithfriendsandroid.domain.models.LocalUser
 import com.shai.pokerwithfriendsandroid.utils.ApiOperation
 import com.shai.pokerwithfriendsandroid.utils.safeApiCall
-import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 import javax.inject.Inject
 
 class UserRepository @Inject constructor(
@@ -35,7 +34,7 @@ class UserRepository @Inject constructor(
     }
 
     private suspend fun register(uid: String, name: String, email: String): RemoteUser {
-        val userRefCache = fireStoreClient.getUserDocumentReference( uid)
+        val userRefCache = fireStoreClient.getUserDocumentReference(uid)
         fireStoreClient.setUserDocumentData(userRefCache, email, name)
         val userCache = fireStoreClient.getUserByDocReference(userRefCache)
         UserCache.updateUserCache(userRefCache, userCache!!)
@@ -60,8 +59,7 @@ class UserRepository @Inject constructor(
         return safeApiCall {
             val userExists = fireStoreClient.getUserById(userId = authUser?.uid ?: "")
             if (userExists != null) {
-                val userRefCache =
-                    fireStoreClient.getUserDocumentReference(authUser?.uid ?: "")
+                val userRefCache = fireStoreClient.getUserDocumentReference(authUser?.uid ?: "")
                 UserCache.updateUserCache(userRefCache, userExists)
                 userExists
             } else {
@@ -73,7 +71,8 @@ class UserRepository @Inject constructor(
     suspend fun fetchUsersByName(searchQuery: String): ApiOperation<List<LocalUser>> {
         //todo: fix this id
         return safeApiCall {
-            fireStoreClient.fetchUsersByName(searchQuery).map { LocalUser(it.name, it.email, "") }
+            fireStoreClient.fetchUsersByName(searchQuery)
+                .map { LocalUser(name = it.name, email = it.email, id = it.id) }
         }
     }
 

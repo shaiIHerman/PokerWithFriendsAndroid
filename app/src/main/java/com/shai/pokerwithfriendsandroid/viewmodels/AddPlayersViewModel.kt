@@ -56,13 +56,13 @@ class AddPlayersViewModel @Inject constructor(private val userRepository: UserRe
             when (searchState) {
                 SearchState.Empty -> _uiState.update { ScreenState.Empty }
                 is SearchState.UserQuery -> {
-                    searchAllCharacters(searchState.query)
+                    searchUsers(searchState.query)
                 }
             }
         }
     }
 
-    private fun searchAllCharacters(query: String) = viewModelScope.launch {
+    private fun searchUsers(query: String) = viewModelScope.launch {
         _uiState.update { ScreenState.Searching }
         userRepository.fetchUsersByName(searchQuery = query).onSuccess { users ->
             _uiState.update {

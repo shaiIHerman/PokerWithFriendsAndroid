@@ -1,8 +1,6 @@
 package com.shai.pokerwithfriendsandroid.viewmodels
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,6 +16,9 @@ import com.shai.pokerwithfriendsandroid.screens.states.TournamentDetailsViewStat
 import com.shai.pokerwithfriendsandroid.utils.ApiOperation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,12 +31,9 @@ class TournamentDetailsViewModel @Inject constructor(
 ) : ViewModel() {
     private val tournamentId: String? = savedStateHandle["tournamentId"]
 
-    private val _tournament = MutableLiveData<LocalTournament?>()
-    val tournament: LiveData<LocalTournament?> = _tournament
-
     private val _tournamentDetailsUiState =
-        MutableLiveData<TournamentDetailsViewState>(TournamentDetailsViewState.Loading)
-    val tournamentDetailsUiState: LiveData<TournamentDetailsViewState> = _tournamentDetailsUiState
+        MutableStateFlow<TournamentDetailsViewState>(TournamentDetailsViewState.Loading)
+    val tournamentDetailsUiState = _tournamentDetailsUiState.asStateFlow()
 
     init {
         tournamentId?.let { loadTournamentById(it) }
@@ -44,24 +42,17 @@ class TournamentDetailsViewModel @Inject constructor(
     private fun loadTournamentById(id: String) {
         viewModelScope.launch {
             tournamentRepository.getTournamentById(id).onSuccess { localTournament ->
-                _tournament.value = localTournament
 
                 // Launch loading of games and users in parallel
-                val gamesDeferred = async { loadGames(_tournament.value?.gameIds ?: emptyList()) }
-                val usersDeferred = async { loadUsers(_tournament.value?.playerIds ?: emptyList()) }
+                val gamesDeferred = async { loadGames(localTournament.gameIds) }
+                val usersDeferred = async { loadUsers(localTournament.playerIds) }
 
-                // Await for both to finish
                 try {
                     val games = gamesDeferred.await() // Wait for games to be loaded
                     val users = usersDeferred.await() // Wait for users to be loaded
 
-                    // Only update the UI when both are done
-                    _tournament.value!!.updatePlayersAndGames(users, games)
-                    _tournament.value?.let { tournament ->
-                        tournament.games = games
-                        updateSessionState()
-                    }
-
+                    localTournament.updatePlayersAndGames(users, games)
+                    updateSessionState(localTournament)
                 } catch (e: Exception) {
                     Log.e("TournamentDetailsViewModel", "Error loading games or users", e)
                 }
@@ -71,13 +62,44 @@ class TournamentDetailsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadUsers(playerIds: List<String>): List<LocalUser> {
-        return when (val result = userRepository.fetchUsersByIds(playerIds)) {
-            is ApiOperation.Success -> result.data // Return the fetched users
-            is ApiOperation.Failure -> {
-                Log.e("TournamentDetailsViewModel", "Error loading users", result.exception)
-                emptyList()
+    fun startNewGame() = viewModelScope.launch {
+        val tournament = getLocalTournament(_tournamentDetailsUiState.value)!!
+        val playersToAdd = tournament.players.filter { !it.first }.map { it.second.id }
+        tournament.let {
+            gamesRepository.addGame(it, playersToAdd).onSuccess { game ->
+                tournamentRepository.addGameToTournament(game, tournamentId!!).onSuccess {}
+                    .onFailure {
+                        Log.e("TournamentDetailsViewModel", "Error adding game to tournament", it)
+                    }
+            }.onFailure {
+                Log.e("TournamentDetailsViewModel", "Error adding game", it)
             }
+        }
+    }
+
+    fun addPlayers() {
+        _tournamentDetailsUiState.update { currentState ->
+            return@update TournamentDetailsViewState.NewGame(getLocalTournament(currentState)!!)
+        }
+    }
+
+    fun onBackClicked() {
+        updateSessionState(getLocalTournament(_tournamentDetailsUiState.value)!!)
+    }
+
+    fun onPlayerSelected(player: TournamentData.AddPlayer) {
+        _tournamentDetailsUiState.update { currentState ->
+            val localTournament = getLocalTournament(currentState)!!
+            val players = localTournament.players
+            val index = players.indexOfFirst { it.second.email == player.email }
+            if (index != -1) {
+                localTournament.players = players.toMutableList().apply {
+                    val updatedPlayer =
+                        players[index].copy(first = !players[index].first) // Update the boolean value
+                    this[index] = updatedPlayer // Set the updated player back to the list
+                }
+                return@update TournamentDetailsViewState.NewGame(localTournament)
+            } else return@update currentState
         }
     }
 
@@ -94,49 +116,31 @@ class TournamentDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun updateSessionState() {
-        val games = _tournament.value?.games
-        if (!games.isNullOrEmpty() && games.last().status == GameStatus.Active) {
-            _tournamentDetailsUiState.value = TournamentDetailsViewState.InSession(_tournament.value!!)
+    private suspend fun loadUsers(playerIds: List<String>): List<LocalUser> {
+        return when (val result = userRepository.fetchUsersByIds(playerIds)) {
+            is ApiOperation.Success -> result.data // Return the fetched users
+            is ApiOperation.Failure -> {
+                Log.e("TournamentDetailsViewModel", "Error loading users", result.exception)
+                emptyList()
+            }
+        }
+    }
+
+    private fun updateSessionState(tournament: LocalTournament) {
+        val games = tournament.games
+        if (games.isNotEmpty() && games.last().status == GameStatus.Active) {
+            _tournamentDetailsUiState.value = TournamentDetailsViewState.InSession(tournament)
         } else {
-            _tournamentDetailsUiState.value = TournamentDetailsViewState.Idle(_tournament.value!!)
+            _tournamentDetailsUiState.value = TournamentDetailsViewState.Idle(tournament)
         }
     }
 
-
-    fun startNewGame() = viewModelScope.launch {
-        val playersToAdd = _tournament.value?.players?.filter { !it.first }?.map { it.second.id }
-        _tournament.value?.let {
-            gamesRepository.addGame(it, playersToAdd!!).onSuccess { game ->
-                tournamentRepository.addGameToTournament(game, tournamentId!!).onSuccess {}
-                    .onFailure {
-                        Log.e("TournamentDetailsViewModel", "Error adding game to tournament", it)
-                    }
-            }.onFailure {
-                Log.e("TournamentDetailsViewModel", "Error adding game", it)
-            }
-        }
-    }
-
-    fun addPlayers() {
-        _tournamentDetailsUiState.value =
-            TournamentDetailsViewState.NewGame(_tournament.value!!.players)
-    }
-
-    fun onBackClicked() {
-        updateSessionState()
-    }
-
-    fun onPlayerSelected(player: TournamentData.AddPlayer) {
-        val players = _tournament.value!!.players
-        val index = players.indexOfFirst { it.second.email == player.email }
-        if (index != -1) {
-            _tournament.value!!.players = players.toMutableList().apply {
-                val updatedPlayer =
-                    players[index].copy(first = !players[index].first) // Update the boolean value
-                this[index] = updatedPlayer // Set the updated player back to the list
-            }
-            addPlayers()
+    private fun getLocalTournament(currentState: TournamentDetailsViewState): LocalTournament? {
+        return when (currentState) {
+            is TournamentDetailsViewState.Idle -> currentState.tournament
+            is TournamentDetailsViewState.InSession -> currentState.tournament
+            is TournamentDetailsViewState.NewGame -> currentState.tournament
+            else -> null
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.shai.pokerwithfriendsandroid.domain.repositories
 
+import android.util.Log
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentReference
@@ -105,6 +106,7 @@ object UserCache {
     fun updateUserCache(userRef: DocumentReference, user: RemoteUser) {
         userRefCache = userRef
         userCache = user
+        Log.d("UserCache", "User cache updated: $user")
     }
 
     fun clearCache() {

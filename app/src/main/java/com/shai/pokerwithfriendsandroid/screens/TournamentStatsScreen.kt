@@ -44,11 +44,15 @@ sealed class NavDestination(val title: String, val icon: ImageVector) {
 }
 
 @Composable
-fun TournamentStatsScreen(viewModel: TournamentDetailsViewModel, onBackClicked: () -> Unit) {
+fun TournamentStatsScreen(
+    viewModel: TournamentDetailsViewModel,
+    tabIndex: Int,
+    onBackClicked: () -> Unit
+) {
     val items = listOf(
         NavDestination.Home, NavDestination.Episodes, NavDestination.Search
     )
-    var selectedIndex by remember { mutableIntStateOf(0) }
+    var selectedIndex by remember { mutableIntStateOf(tabIndex) }
 
     val uiState by viewModel.tournamentDetailsUiState.collectAsState()
 

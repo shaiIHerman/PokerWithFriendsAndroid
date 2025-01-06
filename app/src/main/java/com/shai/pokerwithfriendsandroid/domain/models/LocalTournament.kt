@@ -110,6 +110,7 @@ fun LocalTournament.updatePlayersAndGames(users: List<LocalUser>, games: List<Lo
         val finalThree = FinalThree()
 
         for (game in games) {
+            if(game.status == GameStatus.Active) break
             val playerInGame = game.players.find { it.player!!.id == playerPair.second.id }
             if (playerInGame != null) {
                 // Player participated in the game

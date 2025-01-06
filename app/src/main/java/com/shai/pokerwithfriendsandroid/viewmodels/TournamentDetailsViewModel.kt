@@ -64,13 +64,15 @@ class TournamentDetailsViewModel @Inject constructor(
 
     fun startNewGame() = viewModelScope.launch {
         val tournament = getLocalTournament(_tournamentDetailsUiState.value)!!
+        _tournamentDetailsUiState.value = TournamentDetailsViewState.CreatingGame(tournament)
         val playersToAdd = tournament.players.filter { !it.first }.map { it.second.id }
         tournament.let {
             gamesRepository.addGame(it, playersToAdd).onSuccess { game ->
-                tournamentRepository.addGameToTournament(game, tournamentId!!).onSuccess {}
-                    .onFailure {
-                        Log.e("TournamentDetailsViewModel", "Error adding game to tournament", it)
-                    }
+                tournamentRepository.addGameToTournament(game, tournamentId!!).onSuccess {
+                    _tournamentDetailsUiState.value = TournamentDetailsViewState.GameCreated(game)
+                }.onFailure {
+                    Log.e("TournamentDetailsViewModel", "Error adding game to tournament", it)
+                }
             }.onFailure {
                 Log.e("TournamentDetailsViewModel", "Error adding game", it)
             }
@@ -89,19 +91,26 @@ class TournamentDetailsViewModel @Inject constructor(
 
     fun onPlayerSelected(player: TournamentData.AddPlayer) {
         _tournamentDetailsUiState.update { currentState ->
-            val localTournament = getLocalTournament(currentState)!!
-            val players = localTournament.players
+            val localTournament =
+                getLocalTournament(currentState)?.copy() // Create a new copy of the tournament to ensure immutability
+                    ?: return@update currentState
+
+            val players = localTournament.players.toMutableList()
             val index = players.indexOfFirst { it.second.email == player.email }
+
             if (index != -1) {
-                localTournament.players = players.toMutableList().apply {
-                    val updatedPlayer =
-                        players[index].copy(first = !players[index].first) // Update the boolean value
-                    this[index] = updatedPlayer // Set the updated player back to the list
-                }
-                return@update TournamentDetailsViewState.NewGame(localTournament)
-            } else return@update currentState
+                players[index] = players[index].copy(first = !players[index].first)
+
+                // Create a new instance otherwise it will be treated as the same object and not collected
+                val updatedTournament = localTournament.copy(players = players)
+
+                return@update TournamentDetailsViewState.NewGame(updatedTournament)
+            } else {
+                return@update currentState
+            }
         }
     }
+
 
     private suspend fun loadGames(gameIds: List<String>): List<LocalGame> {
         if (gameIds.isEmpty() || gameIds[0].isEmpty()) {

@@ -14,6 +14,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -28,10 +29,12 @@ import com.shai.pokerwithfriendsandroid.components.AppTopBar
 import com.shai.pokerwithfriendsandroid.components.LoadingState
 import com.shai.pokerwithfriendsandroid.components.PrimaryButton
 import com.shai.pokerwithfriendsandroid.components.ShowUsers
+import com.shai.pokerwithfriendsandroid.components.SpacerSize
 import com.shai.pokerwithfriendsandroid.domain.models.LocalTournament
 import com.shai.pokerwithfriendsandroid.domain.models.LocalUser
 import com.shai.pokerwithfriendsandroid.screens.states.TournamentDetailsViewState
 import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
+import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentData
 import com.shai.pokerwithfriendsandroid.viewmodels.TournamentDetailsViewModel
 
@@ -44,6 +47,11 @@ fun TournamentDetailsScreen(
 ) {
     val tournamentDetailsViewState by viewModel.tournamentDetailsUiState.collectAsState()
 
+    LaunchedEffect(tournamentDetailsViewState) {
+        if (tournamentDetailsViewState is TournamentDetailsViewState.GameCreated) {
+            onNavigateToGame((tournamentDetailsViewState as TournamentDetailsViewState.GameCreated).gameId)
+        }
+    }
     Scaffold(
         topBar = {
             TournamentDetailsTopBar(uiState = tournamentDetailsViewState,
@@ -66,6 +74,7 @@ fun TournamentDetailsScreen(
                 }
 
                 is TournamentDetailsViewState.InSession -> TournamentDetailsContent(state.tournament,
+                    isInSession = true,
                     onStatsClicked = {
                         onNavigateToStats(it)
                     }) {
@@ -82,6 +91,12 @@ fun TournamentDetailsScreen(
                     onConfirmClicked = {
                         viewModel.startNewGame()
                     })
+
+                is TournamentDetailsViewState.CreatingGame -> CreatingGame(state.tournament.players,
+                    {},
+                    {})
+
+                else -> {}
             }
         }
     }
@@ -115,16 +130,30 @@ fun AddPLayersToGame(
     ShowUsers(players) {
         onPlayerSelected(it)
     }
-    BottomButton("Confirm & Start") { onConfirmClicked() }
+    BottomButton(text = "Confirm & Start") { onConfirmClicked() }
+}
+
+@Composable
+fun CreatingGame(
+    players: List<Pair<Boolean, LocalUser>>,
+    onPlayerSelected: (TournamentData.AddPlayer) -> Unit,
+    onConfirmClicked: () -> Unit
+) {
+    ShowUsers(players) {
+        onPlayerSelected(it)
+    }
+    BottomButton(text = "Confirm & Start", progressText = "Creating Game") { onConfirmClicked() }
 }
 
 @Composable
 fun TournamentDetailsContent(
     tournament: LocalTournament,
+    isInSession: Boolean = false,
     onStatsClicked: (Int) -> Unit,
-    bottomButton: @Composable () -> Unit,
+    bottomButton: @Composable () -> Unit
 ) {
-    val gamesPlayed = if (tournament.gameIds[0].isEmpty()) 0 else tournament.gameIds.size
+    val gamesPlayed =
+        if (tournament.gameIds[0].isEmpty()) 0 else tournament.gameIds.size - if (isInSession) 1 else 0
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Tournament Name: ${tournament.name}")
         Text("Buy-In: ${tournament.buyIn}")
@@ -134,37 +163,48 @@ fun TournamentDetailsContent(
         HorizontalDivider()
         AppSpacer()
         Text("Leaders:")
+        AppSpacer(SpacerSize.Medium)
         if (tournament.games.isEmpty()) {
             Text("No games played yet, no leaders to show")
         } else {
             Row(
                 modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Position leader: ${tournament.getPositionLeader()}")
+                Column {
+                    Text("Position leader:")
+                    Text(tournament.getPositionLeader(), color = Tertirary)
+                }
                 SeeDetails { onStatsClicked(0) }
             }
+            AppSpacer(SpacerSize.Medium)
             Row(
                 modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Earnings leader: ${tournament.getMoneyLeader()}")
+                Column {
+                    Text("Earnings leader:")
+                    Text(tournament.getMoneyLeader(), color = Tertirary)
+                }
                 SeeDetails { onStatsClicked(1) }
             }
+            AppSpacer(SpacerSize.Medium)
             Row(
                 modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("First place leader: ${tournament.getFirstPlaceLeader()}")
+
+                Column {
+                    Text("First place leader:")
+                    Text(tournament.getFirstPlaceLeader(), color = Tertirary)
+                }
                 SeeDetails { onStatsClicked(2) }
             }
+            AppSpacer(SpacerSize.Medium)
             Row(
                 modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Second place leader: ${tournament.getSecondPlaceLeader()}")
-                SeeDetails { onStatsClicked(2) }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Bubble leader: ${tournament.getBubbleLeader()}")
+                Column {
+                    Text("Second place leader:")
+                    Text(tournament.getSecondPlaceLeader(), color = Tertirary)
+                }
                 SeeDetails { onStatsClicked(2) }
             }
         }
@@ -174,8 +214,12 @@ fun TournamentDetailsContent(
 }
 
 @Composable
-fun BottomButton(text: String, onClick: () -> Unit) {
-    PrimaryButton(text) { onClick() }
+fun BottomButton(text: String, progressText: String? = null, onClick: () -> Unit) {
+    if (progressText == null) {
+        PrimaryButton(text) { onClick() }
+    } else {
+        PrimaryButton(text, showProgress = true, progressText = progressText) { onClick() }
+    }
 }
 
 @Composable

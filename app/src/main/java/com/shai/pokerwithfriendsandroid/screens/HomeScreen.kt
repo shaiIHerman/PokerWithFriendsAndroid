@@ -1,5 +1,6 @@
 package com.shai.pokerwithfriendsandroid.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -50,7 +51,10 @@ fun HomeScreen(
     // We want to use LaunchedEffect to fetch tournaments only once when the composable is first created,
     // and not from the viewmodel init because we want it to be in sync with the state controlled by
     // the viewmodel but handled by the composable.
-    LaunchedEffect(key1 = Unit) { viewModel.fetchTournaments() }
+    LaunchedEffect(key1 = Unit) {
+        Log.d("HomeScreen", "Fetching tournaments")
+        viewModel.fetchTournaments()
+    }
     Scaffold(topBar = {
         AppTopBar(title = "Tournaments")
     }, floatingActionButton = {

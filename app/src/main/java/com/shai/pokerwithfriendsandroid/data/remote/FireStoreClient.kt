@@ -152,8 +152,13 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
     suspend fun createTournamentAndSyncUsers(data: HashMap<String, Any?>): String {
         val tournament = fireStoreAPI.createDocument("tournaments", data)
         val players = data["players"] as List<DocumentReference>
+        val currentUser = UserCache.getUserRef()
         players.map {
             updateUserWithTournamentReference(it, tournament)
+            if (it == currentUser) {
+                val userCache = getUserByDocReference(currentUser)
+                UserCache.updateUserCache(currentUser, userCache!!)
+            }
         }
         // todo: this now has dual responsibility, consider splitting it up later
         return tournament.id
@@ -170,9 +175,7 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
     }
 
     suspend fun updatePlayerPositionsForGame(
-        gameId: String,
-        players: List<HashMap<String, Any>>,
-        gameOver: Boolean
+        gameId: String, players: List<HashMap<String, Any>>, gameOver: Boolean
     ): Void? {
         val fieldsToUpdate = if (!gameOver) mapOf(
             "players" to players,

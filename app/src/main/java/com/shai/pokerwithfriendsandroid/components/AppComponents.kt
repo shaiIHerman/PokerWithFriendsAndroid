@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import com.shai.pokerwithfriendsandroid.R
 import com.shai.pokerwithfriendsandroid.ui.theme.BorderColor
 import com.shai.pokerwithfriendsandroid.ui.theme.BrandColor
+import com.shai.pokerwithfriendsandroid.ui.theme.Secondary
 import com.shai.pokerwithfriendsandroid.ui.theme.Tertirary
 import com.shai.pokerwithfriendsandroid.utils.PasswordValidator
 
@@ -332,7 +333,7 @@ fun PrimaryButton(
 ) {
     Button(
         onClick = { onPrimaryBtnClick() }, colors = ButtonDefaults.buttonColors(
-            containerColor = BrandColor
+            containerColor = if (!showProgress) BrandColor else Secondary
         ), modifier = Modifier
             .fillMaxWidth()
             .padding(top = 40.dp)
@@ -344,7 +345,7 @@ fun PrimaryButton(
             if (showProgress) {
                 CircularProgressIndicator(
                     modifier = Modifier
-                        .size(24.dp)
+                        .size(18.dp)
                         .padding(end = 8.dp),
                     color = Color.White,
                     strokeWidth = 2.dp
@@ -422,9 +423,17 @@ fun DividerWithText() {
     }
 }
 
+enum class SpacerSize {
+    Small, Medium, Large
+}
+
 @Composable
-fun AppSpacer() {
-    Spacer(modifier = Modifier.height(16.dp))
+fun AppSpacer(spacerSize: SpacerSize = SpacerSize.Large) {
+    when (spacerSize) {
+        SpacerSize.Small -> Spacer(modifier = Modifier.height(4.dp))
+        SpacerSize.Medium -> Spacer(modifier = Modifier.height(8.dp))
+        SpacerSize.Large -> Spacer(modifier = Modifier.height(16.dp))
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -459,7 +468,9 @@ fun <T> Table(
         modifier = modifier, color = Color.Transparent
     ) {
         LazyRow(
-            modifier = Modifier.padding(16.dp).background(color = Color.Transparent)
+            modifier = Modifier
+                .padding(16.dp)
+                .background(color = Color.Transparent)
         ) {
             items((0 until columnCount).toList()) { columnIndex ->
                 Column(Modifier.background(color = Color.Transparent)) {

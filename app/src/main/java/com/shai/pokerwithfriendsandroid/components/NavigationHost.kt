@@ -90,8 +90,12 @@ fun NavigationHost(
             arguments = listOf(navArgument("tabIndex") { type = NavType.IntType })
         ) {
             // Using the same viewmodel as the tournament details screen so that we can share the tournament data
-            val viewmodel: TournamentDetailsViewModel = hiltViewModel(navController.previousBackStackEntry!!)
-            TournamentStatsScreen(viewModel = viewmodel){
+            val viewmodel: TournamentDetailsViewModel =
+                hiltViewModel(navController.previousBackStackEntry!!)
+            TournamentStatsScreen(
+                viewModel = viewmodel,
+                tabIndex = it.arguments?.getInt("tabIndex") ?: 0
+            ) {
                 navController.navigateUp()
             }
         }

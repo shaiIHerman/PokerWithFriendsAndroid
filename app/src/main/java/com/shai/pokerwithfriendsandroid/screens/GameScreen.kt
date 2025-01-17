@@ -16,6 +16,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -35,9 +36,7 @@ import com.shai.pokerwithfriendsandroid.viewmodels.GameViewModel
 
 @Composable
 fun GameScreen(viewModel: GameViewModel, onBackClicked: () -> Unit) {
-    val gameDetailsViewState by viewModel.gameDetailsUiState.observeAsState(
-        GameViewState.Loading
-    )
+    val gameDetailsViewState by viewModel.gameDetailsUiState.collectAsState()
     Scaffold(
         topBar = {
             AppTopBar(title = "Game Details",
@@ -49,7 +48,7 @@ fun GameScreen(viewModel: GameViewModel, onBackClicked: () -> Unit) {
 
             when (val state = gameDetailsViewState) {
                 GameViewState.Loading -> LoadingState()
-                is GameViewState.Success -> GameDetailsContent(state.game) {
+                is GameViewState.Success -> GameDetailsContent(state.game.localGame) {
                     viewModel.onPlayerLost(it)
                 }
 

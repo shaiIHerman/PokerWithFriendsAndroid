@@ -14,6 +14,7 @@ import com.shai.pokerwithfriendsandroid.domain.repositories.TournamentRepository
 import com.shai.pokerwithfriendsandroid.domain.repositories.UserRepository
 import com.shai.pokerwithfriendsandroid.screens.states.TournamentDetailsViewState
 import com.shai.pokerwithfriendsandroid.utils.ApiOperation
+import com.shai.pokerwithfriendsandroid.utils.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,7 +45,7 @@ class TournamentDetailsViewModel @Inject constructor(
             tournamentRepository.getTournamentById(id).onSuccess { localTournament ->
 
                 // Launch loading of games and users in parallel
-                val gamesDeferred = async { loadGames(localTournament.gameIds) }
+                val gamesDeferred = async { loadGames(tournamentId = id) }
                 val usersDeferred = async { loadUsers(localTournament.playerIds) }
 
                 try {
@@ -69,7 +70,8 @@ class TournamentDetailsViewModel @Inject constructor(
         tournament.let {
             gamesRepository.addGame(it, playersToAdd).onSuccess { game ->
                 tournamentRepository.addGameToTournament(game, tournamentId!!).onSuccess {
-                    _tournamentDetailsUiState.value = TournamentDetailsViewState.GameCreated(game)
+                    _tournamentDetailsUiState.value =
+                        TournamentDetailsViewState.GameCreated(Event(game))
                 }.onFailure {
                     Log.e("TournamentDetailsViewModel", "Error adding game to tournament", it)
                 }
@@ -112,11 +114,12 @@ class TournamentDetailsViewModel @Inject constructor(
     }
 
 
-    private suspend fun loadGames(gameIds: List<String>): List<LocalGame> {
-        if (gameIds.isEmpty() || gameIds[0].isEmpty()) {
-            return emptyList()
-        }
-        return when (val result = gamesRepository.getGamesByIds(gameIds)) {
+    private suspend fun loadGames(tournamentId: String): List<LocalGame> {
+//        if (gameIds.isEmpty() || gameIds[0].isEmpty()) {
+//            return emptyList()
+//        }
+        return when (val result =
+            gamesRepository.getGamesForTournament(tournamentId = tournamentId)) {
             is ApiOperation.Success -> result.data // Return the fetched games
             is ApiOperation.Failure -> {
                 Log.e("TournamentDetailsViewModel", "Error loading games", result.exception)

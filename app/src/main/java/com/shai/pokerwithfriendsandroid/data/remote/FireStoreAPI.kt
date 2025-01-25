@@ -4,6 +4,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
@@ -25,8 +26,47 @@ class FireStoreAPI {
         return documentReference.get().await().toObjectWithId()
     }
 
-    suspend inline fun <reified T> getDocument(collectionName: String, docId: String): T? {
-        return firestore.collection(collectionName).document(docId).get().await().toObjectWithId()
+    suspend inline fun <reified T> getDocument(collectionName: String, docId: String, shouldExist: Boolean = true): T? {
+        val documentSnapshot =  firestore.collection(collectionName).document(docId).get().await()
+        if (!documentSnapshot.exists()) {
+            if (shouldExist) {
+                throw IllegalStateException("Document with ID $docId in collection $collectionName does not exist.")
+            }
+            return null
+        }
+
+        return documentSnapshot.toObjectWithId()
+    }
+
+    suspend inline fun <reified T> fetchUpdatedGamesForTournament(
+        collectionName: String,
+        filterFieldName: String,
+        filterFieldValue: Any,
+        knownGameIds: List<String>,
+    ): List<T> {
+        // Split knownGameIds into chunks of 10 to handle Firestore's limit
+        val queryResults = mutableListOf<T>()
+
+        if (knownGameIds.isEmpty()) {
+            // If no knownGameIds, fetch all matching documents
+            return firestore.collection(collectionName)
+                .whereEqualTo(filterFieldName, filterFieldValue)
+                .get()
+                .await()
+                .toObjectsWithIds()
+        }
+
+        knownGameIds.chunked(10).forEach { chunk ->
+            val snapshot = firestore.collection(collectionName)
+                .whereEqualTo(filterFieldName, filterFieldValue) // Filter by the tournament ID
+                .whereNotIn(FieldPath.documentId(), chunk) // Exclude known game IDs
+                .get()
+                .await()
+
+            queryResults.addAll(snapshot.toObjectsWithIds())
+        }
+
+        return queryResults
     }
 
     suspend fun getDocumentReference(collectionName: String, docId: String): DocumentReference {

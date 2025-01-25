@@ -82,6 +82,7 @@ dependencies {
     implementation(libs.play.services.auth)
     implementation(libs.bundles.room)
     kapt(libs.androidx.room.compiler)
+    implementation (libs.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

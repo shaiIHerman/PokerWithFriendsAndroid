@@ -107,7 +107,7 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
     }
 
     suspend fun getUserById(userId: String): RemoteUser? {
-        return fireStoreAPI.getDocument<RemoteUser>(collectionName = "users", docId = userId)
+        return fireStoreAPI.getDocument<RemoteUser?>(collectionName = "users", docId = userId, shouldExist = false)
     }
 
     private suspend fun updateUserWithTournamentReference(
@@ -170,7 +170,14 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
         return fireStoreAPI.createDocument("games", data).id
     }
 
-    suspend fun getGameById(gameId: String): RemoteGame? {
+    suspend fun getGameById(gameId: String, lastSyncTimestamp: Long?): RemoteGame? {
+        var firestoreTimestamp = Timestamp(0, 0)
+        // Here we convert the lastSyncTimestamp to a Timestamp object compatible with Firestore
+        if (lastSyncTimestamp != null) {
+            val seconds = lastSyncTimestamp / 1000
+            val nanoseconds = (lastSyncTimestamp % 1000) * 1000000
+            firestoreTimestamp = Timestamp(seconds, nanoseconds.toInt())
+        }
         return fireStoreAPI.getDocument<RemoteGame>(collectionName = "games", docId = gameId)
     }
 
@@ -187,6 +194,25 @@ class FireStoreClient @Inject constructor(private val fireStoreAPI: FireStoreAPI
         }
         return fireStoreAPI.updateDocumentWithData(
             collectionName = "games", docId = gameId, fieldsToUpdate = fieldsToUpdate
+        )
+    }
+
+    suspend fun fetchGamesForTournament(
+        tournamentId: String,
+        knownGameIds: List<String>,
+    ): List<RemoteGame> {
+//        var firestoreTimestamp = Timestamp(0, 0)
+//        // Here we convert the lastSyncTimestamp to a Timestamp object compatible with Firestore
+//        if (lastSyncTimestamp != null) {
+//            val seconds = lastSyncTimestamp / 1000
+//            val nanoseconds = (lastSyncTimestamp % 1000) * 1000000
+//            firestoreTimestamp = Timestamp(seconds, nanoseconds.toInt())
+//        }
+        return fireStoreAPI.fetchUpdatedGamesForTournament(
+            collectionName = "games",
+            filterFieldName = "tournamentId",
+            filterFieldValue = tournamentId,
+            knownGameIds = knownGameIds
         )
     }
 }

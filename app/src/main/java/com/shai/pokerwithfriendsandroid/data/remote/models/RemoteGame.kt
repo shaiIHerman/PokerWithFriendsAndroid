@@ -2,7 +2,6 @@ package com.shai.pokerwithfriendsandroid.data.remote.models
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.PropertyName
 import com.shai.pokerwithfriendsandroid.domain.models.GameStatus
 import com.shai.pokerwithfriendsandroid.domain.models.LocalGame
 
@@ -11,10 +10,12 @@ data class RemoteGame(
     val active: Boolean,
     val buyIn: String,
     val players: List<PlayerPosition>,
-    val dateCreated: Timestamp
+    val tournamentId: String,
+    val dateCreated: Timestamp,
+    val dateUpdated: Timestamp
 ) : WithId {
     constructor() : this(
-        "", false, "", emptyList(), Timestamp.now()
+        "", false, "", emptyList(), "", Timestamp.now(), Timestamp.now()
     )
 
     data class PlayerPosition(val position: Int, val player: DocumentReference?) {
@@ -24,6 +25,7 @@ data class RemoteGame(
 
 fun RemoteGame.toLocalGame(users: List<RemoteUser?>?): LocalGame {
     val dateCreated = dateCreated.toDate().time
+    val dateUpdated = dateUpdated.toDate().time
     val gameStatus = when (active) {
         true -> GameStatus.Active
         false -> GameStatus.Completed
@@ -40,6 +42,8 @@ fun RemoteGame.toLocalGame(users: List<RemoteUser?>?): LocalGame {
         status = gameStatus,
         buyIn = buyIn,
         players = localPlayers,
-        dateCreated = dateCreated
+        tournamentId = tournamentId,
+        dateCreated = dateCreated,
+        dateUpdated = dateUpdated
     )
 }

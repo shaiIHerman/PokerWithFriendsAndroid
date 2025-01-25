@@ -30,7 +30,8 @@ class TournamentRepository @Inject constructor(
         val lastSyncTimestamp = (lastSyncTimestampResult as ApiOperation.Success).data
 
         // Fetch new or updated tournaments from Firestore
-        val remoteTournamentsResult = remoteTournamentDataSource.fetchTournamentsForUser(lastSyncTimestamp)
+        val remoteTournamentsResult =
+            remoteTournamentDataSource.fetchTournamentsForUser(lastSyncTimestamp)
         if (remoteTournamentsResult is ApiOperation.Failure) {
             return remoteTournamentsResult
         }
@@ -40,7 +41,11 @@ class TournamentRepository @Inject constructor(
         if (remoteTournaments.isNotEmpty()) {
             val latestSyncTime =
                 remoteTournaments.maxOfOrNull { it.dateUpdated } ?: System.currentTimeMillis()
-            syncInfoDao.insertSyncInfo(SyncInfoEntity(lastSyncTimestamp = latestSyncTime))
+            syncInfoDao.insertSyncInfo(
+                SyncInfoEntity(
+                    lastSyncTimestamp = latestSyncTime
+                )
+            )
         }
 
         // Insert new tournaments or update existing into local DB (Room)

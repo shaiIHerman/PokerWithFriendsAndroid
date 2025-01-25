@@ -49,7 +49,11 @@ fun TournamentDetailsScreen(
 
     LaunchedEffect(tournamentDetailsViewState) {
         if (tournamentDetailsViewState is TournamentDetailsViewState.GameCreated) {
-            onNavigateToGame((tournamentDetailsViewState as TournamentDetailsViewState.GameCreated).gameId)
+            val event =
+                (tournamentDetailsViewState as TournamentDetailsViewState.GameCreated).gameId
+            event.getContentIfNotHandled()?.let { gameId ->
+                onNavigateToGame(gameId) // This will only execute once per event.
+            }
         }
     }
     Scaffold(
@@ -73,7 +77,8 @@ fun TournamentDetailsScreen(
                     }
                 }
 
-                is TournamentDetailsViewState.InSession -> TournamentDetailsContent(state.tournament,
+                is TournamentDetailsViewState.InSession -> TournamentDetailsContent(
+                    state.tournament,
                     isInSession = true,
                     onStatsClicked = {
                         onNavigateToStats(it)
@@ -152,8 +157,7 @@ fun TournamentDetailsContent(
     onStatsClicked: (Int) -> Unit,
     bottomButton: @Composable () -> Unit
 ) {
-    val gamesPlayed =
-        if (tournament.gameIds[0].isEmpty()) 0 else tournament.gameIds.size - if (isInSession) 1 else 0
+    val gamesPlayed = if (tournament.gameIds[0].isEmpty()) 0 else tournament.gameIds.size - if (isInSession) 1 else 0
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Tournament Name: ${tournament.name}")
         Text("Buy-In: ${tournament.buyIn}")

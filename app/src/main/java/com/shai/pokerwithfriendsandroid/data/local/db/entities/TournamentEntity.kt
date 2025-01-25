@@ -36,8 +36,8 @@ fun TournamentEntity.toLocalTournament(): LocalTournament {
         id = this.id,
         name = this.name,
         buyIn = this.buyIn,
-        playerIds = this.playerIds,
         gameIds = this.gameIds,
+        playerIds = this.playerIds,
         dateCreated = this.dateCreated,
         adminId = this.adminId
     )

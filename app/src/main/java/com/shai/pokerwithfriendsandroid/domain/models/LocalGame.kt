@@ -1,13 +1,18 @@
 package com.shai.pokerwithfriendsandroid.domain.models
 
 import android.util.Log
+import com.google.gson.Gson
+import com.shai.pokerwithfriendsandroid.data.local.db.entities.GameEntity
+import com.shai.pokerwithfriendsandroid.data.local.db.entities.TournamentEntity
 
 data class LocalGame(
     val id: String = "",
     val status: GameStatus,
     val buyIn: String,
     var players: List<PlayerPosition>,
-    val dateCreated: Long
+    val tournamentId: String,
+    val dateCreated: Long,
+    val dateUpdated: Long
 ) {
     data class PlayerPosition(var position: Int, val player: LocalUser?) {
         constructor() : this(0, null)
@@ -55,6 +60,18 @@ data class LocalGame(
     }
 }
 
+fun LocalGame.toGameEntity() : GameEntity {
+    val gson = Gson()
+    return GameEntity(
+        id = id,
+        status = status.displayName,
+        buyIn = buyIn,
+        tournamentId = tournamentId,
+        playerPositionsJson = gson.toJson(players),
+        dateCreated = dateCreated,
+        dateUpdated = dateUpdated
+    )
+}
 // todo: player position needs to be converted to a local object as well
 
 

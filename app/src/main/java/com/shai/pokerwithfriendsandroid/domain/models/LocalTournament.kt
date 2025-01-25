@@ -7,12 +7,12 @@ data class LocalTournament(
     val name: String,
     val buyIn: String,
     val playerIds: List<String>,
-    val gameIds: List<String>,
     val dateCreated: Long = 0,
     val dateUpdated: Long = 0,
     val adminId: String = "",
     var players: List<Pair<Boolean, LocalUser>> = emptyList(),
     var games: List<LocalGame> = emptyList(),
+    var gameIds: List<String> = emptyList(),
     var statistics: HashMap<String, Statistics> = hashMapOf()
 ) {
     data class RankingStats(val stats: Statistics, val position: Int, val over60Position: Int)
